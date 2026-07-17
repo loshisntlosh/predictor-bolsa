@@ -11,7 +11,8 @@ class MarketMetrics:
     short_ratio: float
     revenue_growth: float
     debt_to_equity: float
-    previous_close: float = 0.0  # Corrección de infraestructura: añadida compatibilidad para el payload
+    previous_close: float = 0.0
+    volume: float = 0.0  # Corrección: Añadido soporte para el argumento inesperado enviado por la infraestructura
 
 @dataclass(frozen=True)
 class TargetForecast:
@@ -38,8 +39,8 @@ class QuantAssessment:
 
 @dataclass(frozen=True)
 class HorizonStrategy:
-    horizon: str  # "Corto Plazo (Trading/Momentum)", "Mediano Plazo (Ciclo/Estructural)", "Largo Plazo (Valor/Core)"
-    action: str   # "COMPRAR", "VENDER", "RETENER/ACUMULAR", "EVITAR"
+    horizon: str  
+    action: str   
     rationale: str
     target_window: str
 
