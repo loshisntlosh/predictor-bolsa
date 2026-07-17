@@ -3,7 +3,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 from infrastructure.yfinance_client import InvestmentDataClient
-from core.engine import InstitutionalQuantEngine, MacroStressEngine # <--- Se agrega el motor macro
+from core.engine import InstitutionalQuantEngine, MacroStressEngine
 from core.exceptions import QuantMatrixError
 import presentation.components as ui
 
@@ -19,8 +19,8 @@ with st.sidebar:
     st.markdown("---")
     seccion = st.radio(
         "Módulos Cuantitativos:",
-        # Se añade la nueva opción "🌋 Simulador de Estrés Macro" al menú lateral
-        ["🏛️ Terminal Institucional", "📅 Cronograma de Eventos", "🎯 Pronósticos de Wall Street", "📊 Gráfico de Precios", "🌋 Simulador de Estrés Macro"]
+        # Agregamos la nueva pestaña de pronósticos interactivos y opiniones reales
+        ["🏛️ Terminal Institucional", "🎯 Pronóstico e IA Oracle", "📅 Cronograma de Eventos", "🎯 Pronósticos de Wall Street", "📊 Gráfico de Precios", "🌋 Simulador de Estrés Macro"]
     )
     st.markdown("---")
     st.markdown("### 🤖 Selección por IA Narrativa")
@@ -48,8 +48,9 @@ if ticker_input:
         catalysts, raw_score = InstitutionalQuantEngine.analizar_catalizadores_y_cronograma(metrics, insiders)
         assessment = InstitutionalQuantEngine.motor_imparcial_ia(client._ticker.news, raw_score, metrics, forecast)
 
-        # Despliegue de cabecera de datos
-        st.markdown(f"### {client._ticker.info.get('longName', ticker_input)} | <span style='color:#64748b; font-size:0.9em;'>Métricas de Flujo Real</span>", unsafe_allow_html=True)
+        # 🌟 NUEVO: CABECERA PREMIUM CON EL VALOR DE LA ACCIÓN VISUALMENTE IMPACTANTE A TIEMPO REAL
+        nombre_empresa = client._ticker.info.get('longName', ticker_input)
+        ui.render_realtime_price_header(ticker_input, nombre_empresa, metrics)
         
         # ==========================================
         # INTERRUPTOR DE VISTAS (SECCIONES)
@@ -74,6 +75,14 @@ if ticker_input:
             with col_u3:
                 st.markdown(f'<div class="scenario-card"><h5 style="color:#94a3b8;margin:0;">📉 Max Drawdown Estimado (VaR)</h5><h3 style="color:#ef4444;">-{assessment.estimated_drawdown:.1f}%</h3><p style="font-size:0.8em;color:#cbd5e1;">Riesgo máximo proyectado bajo condiciones adversas.</p></div>', unsafe_allow_html=True)
 
+        # 🌟 NUEVA SECCIÓN COMPLETA DE FORECAST INTERACTIVO + OPINIONES REALES + IA ORACLE
+        elif seccion == "🎯 Pronóstico e IA Oracle":
+            col_or1, col_or2 = st.columns([1, 1])
+            with col_or1:
+                ui.render_investor_forecast_feed(ticker_input, assessment)
+            with col_or2:
+                ui.render_ai_oracle_box(ticker_input, assessment)
+
         elif seccion == "📅 Cronograma de Eventos":
             st.subheader("📅 Cronograma Predictivo de Ventanas de Impacto de Valor")
             ui.render_timeline(catalysts)
@@ -91,12 +100,8 @@ if ticker_input:
             if not historial.empty:
                 st.line_chart(historial['Close'], use_container_width=True)
                 
-        # ==========================================
-        # INTEGRACIÓN DEL MÓDULO DISRUPTIVO MACRO
-        # ==========================================
         elif seccion == "🌋 Simulador de Estrés Macro":
             st.subheader("🌋 Simulador Cuántico de Regímenes de Estrés Macroeconómico")
-            # Ejecución matemática limpia y paso de datos al componente visual
             shocks_proyectados = MacroStressEngine.simulate_regime_shocks(metrics, forecast)
             ui.render_stress_testing_dashboard(shocks_proyectados)
 
