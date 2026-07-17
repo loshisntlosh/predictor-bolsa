@@ -1,3 +1,4 @@
+# core/engine.py
 from datetime import datetime, timedelta
 from typing import List, Tuple, Optional
 import pandas as pd
@@ -93,15 +94,13 @@ class InstitutionalQuantEngine:
         else:
             return QuantAssessment("⚖️ DISTRIBUCIÓN LATERAL", "#94a3b8", porcentaje_confianza, score_final_ia, margin_of_safety, estimated_drawdown)
 
-
 class MacroStressEngine:
     @staticmethod
     def simulate_regime_shocks(metrics: MarketMetrics, forecast: TargetForecast) -> List[MacroShockResult]:
         shocks = []
         base_price = metrics.current_price
         
-        # Escenario 1: Choque de Tasas de Interés (Hawkish Pivot 2026)
-        # Impacta severamente a empresas apalancadas (Debt to Equity alto)
+        # Escenario 1: Choque de Tasas de Interés
         interest_sensitivity = (metrics.debt_to_equity / 100.0) * 0.15
         shock_price_rates = base_price * (1.0 - interest_sensitivity)
         shocks.append(MacroShockResult(
@@ -113,7 +112,6 @@ class MacroStressEngine:
         ))
         
         # Escenario 2: Crisis de Cadenas de Suministro / Geopolítica
-        # Impacta si el crecimiento ya viene desacelerándose
         growth_buffer = max(metrics.revenue_growth, 0.01)
         supply_shock_impact = 0.20 / growth_buffer if growth_buffer < 0.10 else 0.05
         shock_price_geo = base_price * (1.0 - supply_shock_impact)
