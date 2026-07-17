@@ -2,6 +2,49 @@
 import streamlit as st
 from typing import List
 from core.domains import QuantAssessment, CatalystEvent, TargetForecast, MarketMetrics
+from core.domains import TrumpPredictionResult
+
+def render_trump_prediction_dashboard(ticker: str, predictions: List[TrumpPredictionResult]) -> None:
+    st.markdown(f"### 🦅 Trump Policy Arbitrage Matrix (`Trumprediction`)")
+    st.write(f"Análisis cuantitativo crudo del impacto de la narrativa política y decretos sobre **{ticker}**:")
+    
+    for pred in predictions:
+        # Determinar colores de alerta política
+        if "BENEFICIARIO" in pred.sentiment_label:
+            color_badge = "#22c55e"
+            bg_badge = "rgba(34, 197, 94, 0.15)"
+        elif "FUEGO CRUZADO" in pred.sentiment_label:
+            color_badge = "#ef4444"
+            bg_badge = "rgba(239, 68, 68, 0.15)"
+        else:
+            color_badge = "#94a3b8"
+            bg_badge = "rgba(148, 163, 184, 0.15)"
+            
+        st.markdown(f"""
+        <div style="background-color: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h4 style="margin: 0; color: #f8fafc; font-size: 1.125em;">{pred.policy_vector}</h4>
+                <div>
+                    <span style="color: {color_badge}; background: {bg_badge}; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 700; margin-right: 10px;">
+                        {pred.sentiment_label}
+                    </span>
+                    <span style="color: #64748b; font-size: 0.8em;">Verificado: <b>{pred.last_update_date}</b></span>
+                </div>
+            </div>
+            <p style="margin: 12px 0; color: #cbd5e1; font-size: 0.95em; line-height: 1.5;">
+                {pred.analysis_justification}
+            </p>
+            <div style="background: #1e293b; height: 6px; border-radius: 3px; position: relative; margin-top: 10px;">
+                <div style="background: {color_badge}; width: {abs(pred.impact_score)}%; height: 100%; border-radius: 3px; position: absolute; left: {50 if pred.impact_score >= 0 else 50 - abs(pred.impact_score)}%;"></div>
+                <div style="position: absolute; left: 50%; top: -4px; background: #f8fafc; width: 2px; height: 14px;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8em; color: #64748b; margin-top: 5px;">
+                <span>Impacto Negativo Max</span>
+                <span style="color: {color_badge}; font-weight: bold;">Score de Arbitraje: {pred.impact_score:+.1f}</span>
+                <span>Impacto Positivo Max</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 def render_injection_styles() -> None:
     st.markdown("""
@@ -137,3 +180,5 @@ def render_timeline(catalysts: List[CatalystEvent]) -> None:
         </div>
         """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
+    
