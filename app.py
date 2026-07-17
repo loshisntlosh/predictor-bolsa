@@ -3,7 +3,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 from infrastructure.yfinance_client import InvestmentDataClient
-from core.engine import InstitutionalQuantEngine, MacroStressEngine, TrumpPredictionEngine # <--- Motores integrados
+from core.engine import InstitutionalQuantEngine, MacroStressEngine, TrumpPredictionEngine
 from core.exceptions import QuantMatrixError
 import presentation.components as ui
 
@@ -19,7 +19,6 @@ with st.sidebar:
     st.markdown("---")
     seccion = st.radio(
         "Módulos Cuantitativos:",
-        # Integración de la sección especializada TRUMPREDICTION
         ["🏛️ Terminal Institucional", "🎯 Pronóstico e IA Oracle", "🦅 Trumprediction", "📅 Cronograma de Eventos", "🎯 Pronósticos de Wall Street", "📊 Gráfico de Precios", "🌋 Simulador de Estrés Macro"]
     )
     st.markdown("---")
@@ -48,7 +47,7 @@ if ticker_input:
         catalysts, raw_score = InstitutionalQuantEngine.analizar_catalizadores_y_cronograma(metrics, insiders)
         assessment = InstitutionalQuantEngine.motor_imparcial_ia(client._ticker.news, raw_score, metrics, forecast)
 
-        # Cabecera Premium en tiempo real
+        # Cabecera Premium en tiempo real con el ticker superior
         nombre_empresa = client._ticker.info.get('longName', ticker_input)
         ui.render_realtime_price_header(ticker_input, nombre_empresa, metrics)
         
@@ -82,10 +81,10 @@ if ticker_input:
             with col_or2:
                 ui.render_ai_oracle_box(ticker_input, assessment)
 
-        # 🌟 NUEVA SECCIÓN MÁSTER: CABLEADO DE TRUMPREDICTION
         elif seccion == "🦅 Trumprediction":
-            impactos_politicos = TrumpPredictionEngine.calculate_exposure(metrics, ticker_input) if hasattr(TrumpPredictionEngine, 'calculate_exposure') else TrumpPredictionEngine.calculate_political_exposure(metrics, ticker_input)
-            ui.render_trump_prediction_dashboard(ticker_input, impactos_politicos)
+            # Ejecuta el motor analítico y envía los datos junto al precio RT para la calculadora
+            impactos_politicos = TrumpPredictionEngine.calculate_political_exposure(metrics, ticker_input)
+            ui.render_trump_prediction_dashboard(ticker_input, impactos_politicos, metrics.current_price)
 
         elif seccion == "📅 Cronograma de Eventos":
             st.subheader("📅 Cronograma Predictivo de Ventanas de Impacto de Valor")
