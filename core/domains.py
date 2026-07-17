@@ -1,5 +1,5 @@
 # core/domains.py
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 @dataclass(frozen=True)
@@ -12,7 +12,21 @@ class MarketMetrics:
     revenue_growth: float
     debt_to_equity: float
     previous_close: float = 0.0
-    volume: float = 0.0  # Corrección: Añadido soporte para el argumento inesperado enviado por la infraestructura
+    volume: float = 0.0
+
+    # Sistema de mitigación contra argumentos inesperados desde la infraestructura (roe, etc.)
+    def __init__(self, current_price: float, price_change: float, percentage_change: float, 
+                 currency: str, short_ratio: float, revenue_growth: float, debt_to_equity: float, 
+                 previous_close: float = 0.0, volume: float = 0.0, **kwargs):
+        object.__setattr__(self, 'current_price', current_price)
+        object.__setattr__(self, 'price_change', price_change)
+        object.__setattr__(self, 'percentage_change', percentage_change)
+        object.__setattr__(self, 'currency', currency)
+        object.__setattr__(self, 'short_ratio', short_ratio)
+        object.__setattr__(self, 'revenue_growth', revenue_growth)
+        object.__setattr__(self, 'debt_to_equity', debt_to_equity)
+        object.__setattr__(self, 'previous_close', previous_close)
+        object.__setattr__(self, 'volume', volume)
 
 @dataclass(frozen=True)
 class TargetForecast:
