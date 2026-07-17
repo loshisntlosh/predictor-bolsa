@@ -43,3 +43,11 @@ class QuantAssessment:
     raw_score: float
     margin_of_safety: float
     estimated_drawdown: float
+
+@dataclass(frozen=True)
+class MacroShockResult:
+    scenario_name: str
+    implied_beta_shift: float
+    projected_price: float
+    risk_level: str  # EXTREME, ELEVATED, MITIGATED
+    vulnerability_index: float  # 0.0 a 100.0
