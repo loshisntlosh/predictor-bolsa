@@ -4,7 +4,6 @@ from typing import List
 
 @dataclass(frozen=True)
 class MarketMetrics:
-    # Todos los parámetros inicializados con valores por defecto para máxima resiliencia institucional
     current_price: float = 0.0
     price_change: float = 0.0
     percentage_change: float = 0.0
@@ -15,7 +14,6 @@ class MarketMetrics:
     previous_close: float = 0.0
     volume: float = 0.0
 
-    # Constructor blindado contra argumentos extra (**kwargs) y faltantes
     def __init__(self, current_price: float = 0.0, price_change: float = 0.0, percentage_change: float = 0.0, 
                  currency: str = "USD", short_ratio: float = 0.0, revenue_growth: float = 0.0, debt_to_equity: float = 0.0, 
                  previous_close: float = 0.0, volume: float = 0.0, **kwargs):
@@ -65,6 +63,7 @@ class TrumpPredictionResult:
     impact_score: float
     sentiment_label: str
     analysis_justification: str
+    hedging_strategy: str  # NUEVO: Estrategia de cobertura institucional
     last_update_date: str
 
 @dataclass(frozen=True)
