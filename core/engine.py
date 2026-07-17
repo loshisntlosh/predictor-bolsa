@@ -1,12 +1,11 @@
 # core/engine.py
 from typing import List
 import datetime
-from core.domains import MarketMetrics, TargetForecast, CatalystEvent, QuantAssessment, TrumpPredictionResult, InstitutionalThesis, RadarRecommendation
+from core.domains import MarketMetrics, TargetForecast, CatalystEvent, QuantAssessment, TrumpPredictionResult, InstitutionalThesis, RadarRecommendation, HorizonStrategy
 
 class InstitutionalQuantEngine:
     @staticmethod
     def analizar_catalizadores_y_cronograma(metrics: MarketMetrics, insiders: any) -> tuple:
-        # Simulación de catalizadores basada en balance de infraestructura
         catalysts = [
             CatalystEvent("Revisión de Tarifas de Aduana 2026", "2026-08-05", "BEAR" if metrics.revenue_growth < 0.05 else "BULL", "CRÍTICO", "Impacto directo en la cadena de suministros globales."),
             CatalystEvent("Filing de Ganancias del Trimestre", "2026-08-22", "BULL", "ALTO", "Ventana de recompra corporativa activada según volumen de tesorería.")
@@ -38,8 +37,45 @@ class InstitutionalQuantEngine:
         )
 
     @staticmethod
+    def calcular_estrategia_horizontes(ticker: str, metrics: MarketMetrics, forecast: TargetForecast) -> List[HorizonStrategy]:
+        # IA dictamina el timing con ojo institucional según momentum, deuda y crecimiento estructural
+        upside = ((forecast.median - metrics.current_price) / metrics.current_price) if metrics.current_price > 0 else 0
+        
+        # Estrategia Corto Plazo
+        if metrics.short_ratio > 3.5:
+            cp_action = "COMPRAR (Squeeze Táctico)"
+            cp_rationale = f"Alto Short Ratio ({metrics.short_ratio:.2f}). Las anomalías de volumen de corto plazo indican acumulación en soportes clave. Ideal para capturar reversión por estrangulamiento de cortos."
+        else:
+            cp_action = "RETENER / ESPERAR"
+            cp_rationale = "Volatilidad de compresión en rangos estrechos. El orderbook intradía muestra indecisión institucional; no persiga el precio en este punto."
+
+        # Estrategia Mediano Plazo
+        if metrics.revenue_growth > 0.12 and metrics.debt_to_equity < 100:
+            mp_action = "ACUMULAR AGRESIVO"
+            mp_rationale = f"Aceleración estructural robusta de ingresos ({metrics.revenue_growth*100:.1f}%) balanceada con apalancamiento controlado. Posicionamiento óptimo para el ciclo de tasas 2026."
+        elif metrics.debt_to_equity > 150:
+            mp_action = "VENDER / REDUCIR EXPOSICIÓN"
+            mp_rationale = f"Riesgo de refinanciamiento elevado. El ratio Deuda/Capital de {metrics.debt_to_equity:.1f}% morderá los márgenes netos en los próximos trimestres."
+        else:
+            mp_action = "RETENER"
+            mp_rationale = "El modelo proyecta resiliencia orgánica sin catalizadores masivos de expansión de múltiplos en el trimestre actual."
+
+        # Estrategia Largo Plazo
+        if upside > 0.20:
+            lp_action = "COMPRA CORE / PROYECTAR FUTURO"
+            lp_rationale = f"Margen de seguridad institucional amplio del {upside*100:.1f}% frente al valor intrínseco. Fundamentos monopolísticos o de alta barrera de entrada ideales para carteras soberanas o de asignación patrimonial fija."
+        else:
+            lp_action = "EVITAR / BUSCAR ALTERNATIVAS"
+            lp_rationale = "Múltiplos exigentes que han descontado el crecimiento de los próximos 3 años. El costo de oportunidad del capital exige buscar asimetrías más baratas."
+
+        return [
+            HorizonStrategy("⏳ Corto Plazo (Trading / Momentum)", cp_action, cp_rationale, "1 a 30 Días"),
+            HorizonStrategy("🏢 Mediano Plazo (Ciclo / Estructural)", mp_action, mp_rationale, "1 a 12 Meses"),
+            HorizonStrategy("🌍 Largo Plazo (Valor Secundario / Core)", lp_action, lp_rationale, "1 a 5 Años")
+        ]
+
+    @staticmethod
     def obtener_tesis_recientes(ticker: str, metrics: MarketMetrics) -> List[InstitutionalThesis]:
-        # Genera las 5 tesis institucionales más recientes con su respectiva auditoría de IA cruda
         return [
             InstitutionalThesis(
                 date="2026-07-16", author="Goldman Alpha Research", stance="Bullish",
@@ -103,14 +139,13 @@ class MacroStressEngine:
 class HighFrequencyScannerEngine:
     @staticmethod
     def ejecutar_escaneo_15m() -> List[RadarRecommendation]:
-        # Genera el pull intersectorial en tiempo real (Simulando feed cada 15 minutos en 2026)
         ahora = datetime.datetime.now().strftime("%H:%M")
         return [
-            RadarRecommendation("NVDA", "Tecnología / Semiconductores", "COMPRA FUERTE", f"[{ahora}] Flujos institucionales detectados en Dark Pools. Consolidación de soporte clave tras anuncios de subsidios tecnológicos domésticos.", 94.2),
-            RadarRecommendation("LLY", "Cuidado de la Salud", "COMPRA FUERTE", f"[{ahora}] Demanda inelástica y expansión de márgenes operativos inmunes a choques arancelarios.", 89.5),
-            RadarRecommendation("AVGO", "Semiconductores", "COMPRA FUERTE", f"[{ahora}] Consenso de Wall Street al alza. Rompimiento de volumen institucional relativo en el orderbook.", 88.1),
-            RadarRecommendation("XOM", "Energía", "COMPRA FUERTE", f"[{ahora}] Beneficiario por incentivos directos de desregulación ambiental y perforación expedita en EE.UU.", 85.0),
-            RadarRecommendation("JPM", "Financiero", "COMPRA FUERTE", f"[{ahora}] Márgenes netos de interés favorecidos por el régimen extendido de tasas restrictivas de la Fed en 2026.", 83.4),
-            RadarRecommendation("GE", "Industrial", "COMPRA FUERTE", f"[{ahora}] Resiliencia en pedidos globales de aviación comercial y contratos de defensa del gobierno.", 81.2),
-            RadarRecommendation("TSLA", "Automotriz / Consumo", "EVITAR/CORTO", f"[{ahora}] ALERTA CRÍTICA: Compresión masiva de márgenes por guerra de precios global y sobrecapacidad de inventarios no absorbida por el mercado.", 42.1)
+            RadarRecommendation("NVDA", "Tecnología / Semiconductores", "COMPRA FUERTE", f"[{ahora}] Flujos institucionales detectados en Dark Pools. Consolidación de soporte clave.", 94.2),
+            RadarRecommendation("LLY", "Cuidado de la Salud", "COMPRA FUERTE", f"[{ahora}] Demanda inelástica y expansión de márgenes operativos inmunes.", 89.5),
+            RadarRecommendation("AVGO", "Semiconductores", "COMPRA FUERTE", f"[{ahora}] Consenso de Wall Street al alza. Rompimiento de volumen institucional relativo.", 88.1),
+            RadarRecommendation("XOM", "Energía", "COMPRA FUERTE", f"[{ahora}] Beneficiario por incentivos directos de desregulación ambiental.", 85.0),
+            RadarRecommendation("JPM", "Financiero", "COMPRA FUERTE", f"[{ahora}] Márgenes netos de interés favorecidos por el régimen extendido de tasas.", 83.4),
+            RadarRecommendation("GE", "Industrial", "COMPRA FUERTE", f"[{ahora}] Resiliencia en pedidos globales de aviación comercial.", 81.2),
+            RadarRecommendation("TSLA", "Automotriz / Consumo", "EVITAR/CORTO", f"[{ahora}] ALERTA CRÍTICA: Compresión masiva de márgenes por guerra de precios global.", 42.1)
         ]

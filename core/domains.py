@@ -11,6 +11,7 @@ class MarketMetrics:
     short_ratio: float
     revenue_growth: float
     debt_to_equity: float
+    previous_close: float = 0.0  # Corrección de infraestructura: añadida compatibilidad para el payload
 
 @dataclass(frozen=True)
 class TargetForecast:
@@ -22,7 +23,7 @@ class TargetForecast:
 class CatalystEvent:
     event_name: str
     projected_date: str
-    direction: str  # "BULL" o "BEAR"
+    direction: str  
     impact_level: str
     desc: str
 
@@ -36,6 +37,13 @@ class QuantAssessment:
     raw_score: float
 
 @dataclass(frozen=True)
+class HorizonStrategy:
+    horizon: str  # "Corto Plazo (Trading/Momentum)", "Mediano Plazo (Ciclo/Estructural)", "Largo Plazo (Valor/Core)"
+    action: str   # "COMPRAR", "VENDER", "RETENER/ACUMULAR", "EVITAR"
+    rationale: str
+    target_window: str
+
+@dataclass(frozen=True)
 class TrumpPredictionResult:
     policy_vector: str
     impact_score: float
@@ -47,7 +55,7 @@ class TrumpPredictionResult:
 class InstitutionalThesis:
     date: str
     author: str
-    stance: str  # "Bullish", "Bearish", "Neutral"
+    stance: str  
     thesis_text: str
     ai_critique: str
     is_valid: bool
@@ -56,6 +64,6 @@ class InstitutionalThesis:
 class RadarRecommendation:
     ticker: str
     sector: str
-    action: str  # "COMPRA FUERTE", "EVITAR/CORTO"
+    action: str  
     justification: str
     score: float
