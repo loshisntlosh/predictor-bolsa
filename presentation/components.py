@@ -1,5 +1,7 @@
-# presentation/components.py
+# REEMPLAZA ESTA FUNCIÓN EN: presentation/components.py
 from core.domains import TrumpPredictionResult
+import streamlit as st
+from typing import List
 
 def render_trump_prediction_dashboard(ticker: str, predictions: List[TrumpPredictionResult], current_price: float) -> None:
     st.markdown(f"### 🦅 Trump Policy Arbitrage Matrix (`Trumprediction`)")
@@ -71,8 +73,7 @@ def render_trump_prediction_dashboard(ticker: str, predictions: List[TrumpPredic
 
     st.markdown("#### Proyección de Escenarios y Modelado de Probabilidad")
     
-    # Lógica Algorítmica con Ojo de Inversionista Ponderando el Score de Trump
-    # Si avg_score es positivo, desplaza la distribución a favor. Si es negativo, penaliza.
+    # Lógica Algorítmica Ponderando el Score Político de Trump
     shift_factor = avg_score / 100.0
 
     escenarios = [
