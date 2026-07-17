@@ -82,7 +82,7 @@ if ticker_input:
                 ui.render_ai_oracle_box(ticker_input, assessment)
 
         elif seccion == "🦅 Trumprediction":
-            # Ejecuta el motor analítico y envía los datos junto al precio RT para la calculadora
+            # Ejecuta el motor analítico político y envía los 3 argumentos sincronizados con la interfaz visual
             impactos_politicos = TrumpPredictionEngine.calculate_political_exposure(metrics, ticker_input)
             ui.render_trump_prediction_dashboard(ticker_input, impactos_politicos, metrics.current_price)
 
