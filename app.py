@@ -3,7 +3,7 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 from infrastructure.yfinance_client import InvestmentDataClient
-from core.engine import InstitutionalQuantEngine
+from core.engine import InstitutionalQuantEngine, MacroStressEngine # <--- Se agrega el motor macro
 from core.exceptions import QuantMatrixError
 import presentation.components as ui
 
@@ -19,12 +19,12 @@ with st.sidebar:
     st.markdown("---")
     seccion = st.radio(
         "Módulos Cuantitativos:",
-        ["🏛️ Terminal Institucional", "📅 Cronograma de Eventos", "🎯 Pronósticos de Wall Street", "📊 Gráfico de Precios"]
+        # Se añade la nueva opción "🌋 Simulador de Estrés Macro" al menú lateral
+        ["🏛️ Terminal Institucional", "📅 Cronograma de Eventos", "🎯 Pronósticos de Wall Street", "📊 Gráfico de Precios", "🌋 Simulador de Estrés Macro"]
     )
     st.markdown("---")
     st.markdown("### 🤖 Selección por IA Narrativa")
     st.caption("Top activos con convergencia fundamental óptima:")
-    # Muestra un screener básico estático rápido en barra lateral para evitar sobrecarga de red
     st.dataframe(pd.DataFrame([
         {"Ticker": "NVDA", "ROE": "54.2%", "Sentimiento": "🔥 Fuerte"},
         {"Ticker": "LLY", "ROE": "32.1%", "Sentimiento": "🟢 Estable"},
@@ -90,6 +90,15 @@ if ticker_input:
             historial = client._ticker.history(period="3mo", interval="1d")
             if not historial.empty:
                 st.line_chart(historial['Close'], use_container_width=True)
+                
+        # ==========================================
+        # INTEGRACIÓN DEL MÓDULO DISRUPTIVO MACRO
+        # ==========================================
+        elif seccion == "🌋 Simulador de Estrés Macro":
+            st.subheader("🌋 Simulador Cuántico de Regímenes de Estrés Macroeconómico")
+            # Ejecución matemática limpia y paso de datos al componente visual
+            shocks_proyectados = MacroStressEngine.simulate_regime_shocks(metrics, forecast)
+            ui.render_stress_testing_dashboard(shocks_proyectados)
 
     except QuantMatrixError as e:
         st.error(f"Error operativo controlado: {str(e)}")
