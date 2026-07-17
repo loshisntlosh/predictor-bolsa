@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple, Optional
 import pandas as pd
-from core.domains import MarketMetrics, TargetForecast, CatalystEvent, QuantAssessment
+from core.domains import MarketMetrics, TargetForecast, CatalystEvent, QuantAssessment, MacroShockResult
 
 class InstitutionalQuantEngine:
     @staticmethod
