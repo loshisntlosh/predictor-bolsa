@@ -6,20 +6,15 @@ from datetime import datetime
 # 1. CONFIGURACIÓN DE PANTALLA Y ESTILOS VISUALES PREMIUM
 st.set_page_config(layout="wide", page_title="El Intersector Pro: Inteligencia de Mercados", page_icon="🔮")
 
-# Inyección de CSS avanzado para diseño oscuro, animaciones Fade-In y efectos Hover interactivos
 st.markdown("""
 <style>
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(12px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    .main-title {
-        animation: fadeIn 0.8s ease-out;
-        color: #f8fafc;
-        font-weight: 800;
-    }
+    .main-title { animation: fadeIn 0.8s ease-out; color: #f8fafc; font-weight: 800; }
     .prediction-box { 
-        padding: 22px; 
+        padding: 25px; 
         border-radius: 12px; 
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 2px solid #06b6d4; 
@@ -29,241 +24,220 @@ st.markdown("""
         margin-bottom: 25px;
     }
     .news-card {
-        padding: 18px; 
-        border-radius: 10px; 
-        background-color: #1e293b; 
-        margin-bottom: 15px;
-        border-left: 5px solid #06b6d4;
-        animation: fadeIn 1.1s ease-out;
+        padding: 18px; border-radius: 10px; background-color: #1e293b; margin-bottom: 15px;
+        border-left: 5px solid #06b6d4; animation: fadeIn 1.1s ease-out;
         transition: transform 0.2s, border-left 0.2s;
     }
-    .news-card:hover {
-        transform: scale(1.015);
-        border-left: 5px solid #22c55e;
-        background-color: #1e293bfa;
-    }
+    .news-card:hover { transform: scale(1.015); border-left: 5px solid #22c55e; background-color: #1e293bfa; }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. ALGORITMO: MOTOR PREDICTIVO DE NARRATIVA (IA BÁSICA)
-def calcular_prediccion_narrativa(noticias, df_insiders):
-    score = 0.0
+# =========================================================================
+# NUEVO MOTOR PREDICTIVO AVANZADO (PRO QUANT ALGORITHM)
+# =========================================================================
+def algoritmo_predictivo_institucional(noticias, df_insiders, volumen_mercado):
+    score_narrativa = 0.0
+    score_insider = 0.0
     
-    # Diccionarios de impacto semántico institucional y político
-    palabras_alcistas = ['growth', 'profit', 'buy', 'upgrade', 'innovation', 'approval', 'record', 'bullish', 'expansion', 'partnership']
-    palabras_bajistas = ['lawsuit', 'loss', 'downgrade', 'risk', 'regulatory', 'investigation', 'declining', 'bearish', 'fine', 'deficit']
+    # 1. Matriz de Impacto Semántico Financiero/Político
+    alcistas = ['growth', 'profit', 'buy', 'upgrade', 'innovation', 'approval', 'record', 'bullish', 'expansion', 'partnership', 'beats', 'surge']
+    bajistas = ['lawsuit', 'loss', 'downgrade', 'risk', 'regulatory', 'investigation', 'declining', 'bearish', 'fine', 'deficit', 'misses', 'drop']
     
+    total_noticias = len(noticias) if noticias else 1
     if noticias:
         for n in noticias:
             titulo = n.get('title', '').lower()
-            if any(word in titulo for word in palabras_alcistas): 
-                score += 0.15
-            if any(word in titulo for word in palabras_bajistas): 
-                score -= 0.15
-    
-    if df_insiders is not None and not df_insiders.empty:
-        transacciones_texto = " ".join(df_insiders['Text'].astype(str).tolist()).lower()
-        if 'buy' in transacciones_texto or 'purchase' in transacciones_texto:
-            score += 0.35  
-        if 'sale' in transacciones_texto or 'sell' in transacciones_texto:
-            score -= 0.10  
-            
-    score = max(min(score, 1.0), -1.0)
-    porcentaje_confianza = abs(score) * 100
-    
-    if score > 0.25:
-        return "⚡ ALCISTA (Posible Oportunidad de Compra)", "#22c55e", porcentaje_confianza
-    elif score < -0.25:
-        return "🚨 BAJISTA (Riesgo de Corrección Detectado)", "#ef4444", porcentaje_confianza
-    else:
-        return "⚖️ NEUTRO (Consolidación / Esperando Catalizadores)", "#94a3b8", porcentaje_confianza
+            menciones_pos = sum(1 for word in alcistas if word in titulo)
+            menciones_neg = sum(1 for word in bajistas if word in titulo)
+            score_narrativa += (menciones_pos * 0.2) - (menciones_neg * 0.2)
+        # Normalizamos la narrativa según el volumen de prensa analizado
+        score_narrativa = score_narrativa / total_noticias
 
-# 3. NAVEGACIÓN LATERAL (NAVBAR)
+    # 2. Análisis del Tamaño del Bloque de Capital (Insider Volume Weighted)
+    if df_insiders is not None and not df_insiders.empty:
+        for _, row in df_insiders.head(10).iterrows():
+            texto_accion = str(row.get('Text', '')).lower()
+            valor_transaccion = float(row.get('Value', 0))
+            acciones_operadas = float(row.get('Shares', 0))
+            
+            # Clasificación por tamaño del capital puesto en riesgo por el directivo
+            peso_capital = 0.1
+            if valor_transaccion > 1000000: peso_capital = 0.4  # Transacción institucional masiva (>1M USD)
+            elif valor_transaccion > 250000: peso_capital = 0.25 # Compra relevante (>250k USD)
+            
+            if 'buy' in texto_accion or 'purchase' in texto_accion:
+                # Si compran y el volumen es alto respecto al promedio diario, es una fuerte anomalía
+                impacto_volumen = (acciones_operadas / volumen_mercado) * 10
+                score_insider += peso_capital + min(impacto_volumen, 0.2)
+            elif 'sale' in texto_accion or 'sell' in texto_accion:
+                score_insider -= (peso_capital * 0.3) # Penalización menor por venta de liquidez
+
+    # 3. Consolidación de la Matriz Predictiva
+    score_total = (score_narrativa * 0.4) + (score_insider * 0.6)
+    score_total = max(min(score_total, 1.0), -1.0)
+    
+    porcentaje_fiabilidad = abs(score_total) * 100
+    
+    # Asignación de perfil según tolerancia al riesgo del inversionista
+    if score_total > 0.20:
+        perfil = "🟢 ALCISTA CONVERGENTE (Señal de Alta Convicción)"
+        color = "#22c55e"
+    elif score_total < -0.20:
+        perfil = "🔴 DISTRIBUCIÓN / BAJISTA (Fuerte Presión de Venta Interna)"
+        color = "#ef4444"
+    else:
+        perfil = "🟡 ACUMULACIÓN NEUTRA (Baja Convicción de Datos)"
+        color = "#94a3b8"
+        
+    return perfil, color, porcentaje_fiabilidad, score_narrativa, score_insider
+
+# =========================================================================
+# INTERFAZ DE USUARIO Y CONFIGURACIÓN DEL NAVBAR
+# =========================================================================
 with st.sidebar:
     st.image("https://img.icons8.com/fluency/96/radar.png", width=55)
     st.markdown("<h2 style='margin-top:0;'>Radar Intersector</h2>", unsafe_allow_html=True)
     st.markdown("---")
-    seccion = st.radio(
+    seccion = st.sidebar.radio(
         "Módulos del Sistema:",
-        ["🔮 Analizador Predictivo (IA)", "🏢 Perfil de la Empresa", "📊 Gráfico Avanzado", "💼 Altos Mandos (SEC)", "📰 Noticias del Sector"]
+        ["🔮 Inteligencia Predictiva", "🏢 Perfil Corporativo", "📊 Análisis Técnico", "💼 Transacciones SEC", "📰 Flujo Informativo"]
     )
     st.markdown("---")
-    st.caption("Filtros en Tiempo Real Activos")
-    st.info("⚠️ Aviso: Este prototipo procesa datos públicos agregados mediante la Teoría del Mosaico. No constituye asesoría financiera.")
+    st.caption("Filtros Profesionales Activos")
 
-# 4. ENCABEZADO Y BUSCADOR PRINCIPAL (Siempre en el Top)
 st.markdown("<h1 class='main-title'>🔮 El Intersector: Inteligencia Financiera</h1>", unsafe_allow_html=True)
-ticker = st.text_input("🔍 Escribe el Ticker de la empresa a investigar (Ej: NVDA, AAPL, AMZN, LLY):", "NVDA").upper()
+ticker = st.text_input("🔍 Ingresa el Ticker de la Empresa (Ej: NVDA, AAPL, AMZN, LLY):", "NVDA").upper()
 
 if ticker:
     try:
-        # Petición global a la API del mercado
+        # Descarga de estructuras de datos bursátiles
         empresa = yf.Ticker(ticker)
         info = empresa.info
         noticias_raw = empresa.news
         insiders_raw = empresa.insider_transactions
         
-        # Extracción y casteo estricto de números en tiempo real
+        # Variables numéricas clave en tiempo real
         precio_actual = float(info.get('currentPrice', info.get('regularMarketPrice', 0.0)))
         precio_previo = float(info.get('previousClose', 1.0))
         cambio_precio = precio_actual - precio_previo
         porcentaje_cambio = (cambio_precio / precio_previo) * 100
-        nombre_empresa = info.get('longName', ticker)
-        moneda = info.get('currency', 'USD')
-        sector = info.get('sector', 'No especificado')
         volumen_hoy = info.get('regularMarketVolume', 1)
+        moneda = info.get('currency', 'USD')
 
-        # Panel de Estado Financiero Superior Elegante
-        st.markdown(f"### {nombre_empresa} <span style='color:#64748b; font-size:0.8em;'>| Sector: {sector}</span>", unsafe_allow_html=True)
+        # Panel de Estado Financiero Superior (KPIs de Mercado)
+        st.markdown(f"### {info.get('longName', ticker)} <span style='color:#64748b; font-size:0.8em;'>| {info.get('sector', 'N/A')}</span>", unsafe_allow_html=True)
         
         col_m1, col_m2, col_m3 = st.columns(3)
         with col_m1:
-            st.metric(label="Precio de Mercado", value=f"${precio_actual:,.2f} {moneda}", delta=f"${cambio_precio:,.2f}")
+            st.metric(label="Último Precio", value=f"${precio_actual:,.2f} {moneda}", delta=f"${cambio_precio:,.2f}")
         with col_m2:
-            st.metric(label="Variación Porcentual", value=f"{porcentaje_cambio:,.2f}%", delta=f"{porcentaje_cambio:,.2f}%")
+            st.metric(label="Retorno Diario (%)", value=f"{porcentaje_cambio:,.2f}%", delta=f"{porcentaje_cambio:,.2f}%")
         with col_m3:
-            st.metric(label="Volumen Operado Hoy", value=f"{volumen_hoy:,}")
+            st.metric(label="Volumen del Día", value=f"{volumen_hoy:,}")
             
         st.markdown("---")
 
         # ==========================================
-        # SECCIÓN A: MOTOR PREDICTIVO CON IA
+        # MODULO 1: INTELIGENCIA PREDICTIVA AVANZADA
         # ==========================================
-        if seccion == "🔮 Analizador Predictivo (IA)":
-            st.subheader("🤖 Diagnóstico de Probabilidad de Tendencia Diaria")
-            st.write("Análisis cuantitativo instantáneo que cruza la tendencia narrativa política/financiera con el comportamiento de la junta directiva.")
+        if seccion == "🔮 Inteligencia Predictiva":
+            st.subheader("🤖 Diagnóstico Cuantitativo del Algoritmo")
+            st.write("Cálculo ponderado por volumen transaccional neto y análisis de sentimiento macroeconómico.")
             
-            resultado, color_resultado, confianza = calcular_prediccion_narrativa(noticias_raw, insiders_raw)
+            # Ejecución del nuevo motor algorítmico
+            resultado, color_r, confianza, sub_narrativa, sub_insider = algoritmo_predictivo_institucional(noticias_raw, insiders_raw, volumen_hoy)
             
             st.markdown(f"""
             <div class="prediction-box">
-                <h2 style="margin:0; font-size:1.8em;">Sentimiento Técnico: <span style="color:{color_resultado};">{resultado}</span></h2>
-                <p style="margin:10px 0 0 0; color:#94a3b8; font-size:1.1em;">Convicción Algorítmica Basada en Datos: <b>{confianza:.1f}%</b></p>
+                <h2 style="margin:0; font-size:1.9em;">Vector de Inversión: <span style="color:{color_r};">{resultado}</span></h2>
+                <p style="margin:10px 0 0 0; color:#94a3b8; font-size:1.1em;">Convicción Matemática del Modelo: <b>{confianza:.1f}%</b></p>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("#### 🤔 ¿Cómo interpretar este porcentaje?")
-            st.info("• **Puntaje Alto (>60%):** Fuerte convergencia. Las noticias del sector y las compras de los directivos apuntan en una misma dirección directa.\n\n• **Puntaje Bajo (<30%):** Incertidumbre o fuerzas cruzadas (ej. noticias malas pero CEOs comprando, o viceversa). Se sugiere cautela para operaciones intradía.")
+            # Desglose de sub-métricas estructurales que exige un analista
+            st.markdown("#### 📊 Desglose de Componentes del Modelo")
+            col_d1, col_d2 = st.columns(2)
+            with col_d1:
+                st.write(f"**Índice de Sentimiento de Prensa (40% peso):** `{sub_narrativa:+.2f}`")
+                st.caption("Puntuación sobre el tono de las últimas 10 noticias políticas y del sector.")
+            with col_d2:
+                st.write(f"**Convicción de Flujo Corporativo (60% peso):** `{sub_insider:+.2f}`")
+                st.caption("Mide el tamaño del capital monetario real que los directores ejecutivos están arriesgando.")
 
         # ==========================================
-        # [NUEVA] SECCIÓN B: PERFIL DE LA EMPRESA (FUNDAMENTALES)
+        # MODULO 2: PERFIL CORPORATIVO
         # ==========================================
-        elif seccion == "🏢 Perfil de la Empresa":
-            st.subheader("🏢 Información Corporativa y Datos Clave")
-            st.write("Conoce las dimensiones de la empresa antes de analizar sus movimientos bursátiles.")
-            
+        elif seccion == "🏢 Perfil Corporativo":
+            st.subheader("🏢 Fundamentales Básicos de la Empresa")
             col_p1, col_p2 = st.columns([1, 2])
             with col_p1:
-                # Datos duros de inversión
-                cap_mercado = info.get('marketCap', 0)
-                st.metric("Capitalización de Mercado (Tamaño)", f"${cap_mercado:,.0f} {moneda}")
-                st.write(f"**País:** {info.get('country', 'N/A')}")
-                st.write(f"**Sitio Web:** [Visitar Web]({info.get('website', '#')})")
-                st.write(f"**Empleados a Tiempo Completo:** {info.get('fullTimeEmployees', 0):,}")
+                st.metric("Capitalización bursátil", f"${info.get('marketCap', 0):,}")
+                st.write(f"**Ubicación:** {info.get('country', 'N/A')}")
+                st.write(f"**Sitio Corporativo:** [Link]({info.get('website', '#')})")
             with col_p2:
-                # Descripción del negocio
-                st.markdown("**Descripción del Negocio:**")
-                st.info(info.get('longBusinessSummary', 'No hay descripción disponible.'))
+                st.markdown("**Resumen de Operaciones:**")
+                st.info(info.get('longBusinessSummary', 'No disponible.'))
 
         # ==========================================
-        # SECCIÓN C: GRÁFICO AVANZADO CON FILTROS
+        # MODULO 3: ANÁLISIS TÉCNICO DE PRECIOS
         # ==========================================
-        elif seccion == "📊 Gráfico Avanzado":
-            st.subheader("📈 Gráfico de Cotización con Temporalidad Variable")
-            
+        elif seccion == "📊 Análisis Técnico":
+            st.subheader("📈 Gráfico de Cotización Estructurado")
             col_t1, col_t2 = st.columns(2)
             with col_t1:
-                periodo = st.selectbox(
-                    "Rango Histórico de Datos:",
-                    ["1 Día", "5 Días", "1 Mes", "6 Meses", "1 Año", "Máximo Histórico"], index=2
-                )
+                periodo = st.selectbox("Rango Temporal:", ["1 Día", "5 Días", "1 Mes", "6 Meses", "1 Año", "Máximo Histórico"], index=2)
             with col_t2:
-                intervalo = st.selectbox(
-                    "Intervalo de las Velas / Barras:",
-                    ["1 Minuto", "5 Minutos", "15 Minutos", "30 Minutos", "1 Hora", "1 Día", "1 Mes"], index=5
-                )
+                intervalo = st.selectbox("Intervalo de Barras:", ["1 Minuto", "5 Minutos", "15 Minutos", "30 Minutos", "1 Hora", "1 Día", "1 Mes"], index=5)
 
             mapa_p = {"1 Día": "1d", "5 Días": "5d", "1 Mes": "1mo", "6 Meses": "6mo", "1 Año": "1y", "Máximo Histórico": "max"}
             mapa_i = {"1 Minuto": "1m", "5 Minutos": "5m", "15 Minutos": "15m", "30 Minutos": "30m", "1 Hora": "1h", "1 Día": "1d", "1 Mes": "1mo"}
             p_api, i_api = mapa_p[periodo], mapa_i[intervalo]
 
-            if "Minuto" in intervalo or "Hora" in intervalo:
-                if p_api in ["6mo", "1y", "max"]:
-                    st.warning("⚠️ Nota: Las frecuencias de minutos solo están disponibles para rangos máximos de 5 días por regulaciones del mercado. Ajustando ventana temporal automáticamente.")
-                    p_api = "5d"
+            if ("Minuto" in intervalo or "Hora" in intervalo) and p_api in ["6mo", "1y", "max"]:
+                st.warning("⚠️ Ajuste automático: Las temporalidades intradía altas se limitan a rangos de 5 días.")
+                p_api = "5d"
 
             historial = empresa.history(period=p_api, interval=i_api)
             if not historial.empty:
                 st.line_chart(historial['Close'], use_container_width=True)
-            else:
-                st.error("Error: No se consolidaron precios para este bloque específico de tiempo.")
 
         # ==========================================
-        # SECCIÓN D: ALTOS MANDOS CON FECHA REAL Y EXPORTADOR
+        # MODULO 4: TRANSACCIONES SEC (INSIDERS)
         # ==========================================
-        elif seccion == "💼 Altos Mandos (SEC)":
-            st.subheader("📅 Registro Cronológico de Transacciones Internas (Insiders)")
-            st.write("Muestra la fecha de operación exacta y verificable reportada ante el regulador.")
-            
+        elif seccion == "💼 Transacciones SEC":
+            st.subheader("📅 Historial Cronológico de Compras y Ventas Oficiales")
             if insiders_raw is not None and not insiders_raw.empty:
                 df_real = insiders_raw.reset_index()
-                if 'index' in df_real.columns:
-                    df_real.rename(columns={'index': 'Fecha Efectiva'}, inplace=True)
+                if 'index' in df_real.columns: df_real.rename(columns={'index': 'Fecha'}, inplace=True)
+                df_real['Fecha'] = pd.to_datetime(df_real['Fecha']).dt.date
                 
-                df_real['Fecha Efectiva'] = pd.to_datetime(df_real['Fecha Efectiva']).dt.date
-                cols_validas = ['Fecha Efectiva', 'Insider', 'Position', 'Text', 'Shares', 'Value']
-                df_final = df_real[[c for c in cols_validas if c in df_real.columns]].sort_values(by='Fecha Efectiva', ascending=False)
+                cols = ['Fecha', 'Insider', 'Position', 'Text', 'Shares', 'Value']
+                df_final = df_real[[c for c in cols if c in df_real.columns]].sort_values(by='Fecha', ascending=False)
                 
-                # [FUNCIONALIDAD EXTRA] Botón para descargar a Excel/CSV directamente
-                csv = df_final.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="📥 Descargar Datos de Altos Mandos (CSV para Excel)",
-                    data=csv,
-                    file_name=f'insiders_{ticker}.csv',
-                    mime='text/csv',
-                )
-                
-                st.dataframe(df_final, use_container_width=True, height=400)
-                
-                # [NUEVA MÉTRICA] Índice de Anomalía de Volumen
-                # Sumamos las acciones operadas en los movimientos más recientes
-                acciones_insiders = df_final['Shares'].iloc[:5].sum()
-                porcentaje_del_volumen = (acciones_insiders / volumen_hoy) * 100
-                
-                st.markdown(f"**📊 Ratio de Impacto Corporativo:** Las últimas transacciones de la junta representan el **{porcentaje_del_volumen:.4f}%** del volumen total que se comercia hoy en el mercado.")
-                
-                compras = df_final[df_final['Text'].str.contains('Buy|Purchase', case=False, na=False)]
-                if not compras.empty:
-                    st.success(f"🔥 Anomalía de Convicción: Detectadas compras directas por miembros de la mesa de control corporativo.")
+                # Botón de extracción de datos para Excel
+                st.download_button(label="📥 Exportar Matriz a CSV", data=df_final.to_csv(index=False).encode('utf-8'), file_name=f'{ticker}_sec_insiders.csv', mime='text/csv')
+                st.dataframe(df_final, use_container_width=True)
             else:
-                st.warning("No hay transacciones registradas de insiders para este activo en los últimos meses.")
+                st.warning("Sin registros de transacciones internas archivados recientemente.")
 
         # ==========================================
-        # SECCIÓN E: NOTICIAS DEL SECTOR CON HOVER
+        # MODULO 5: FLUJO INFORMATIVO (NOTICIAS)
         # ==========================================
-        elif seccion == "📰 Noticias del Sector":
-            st.subheader(f"📰 Flujo de Prensa Cruzada: {ticker} y Entorno Político")
-            
+        elif seccion == "📰 Flujo Informativo":
+            st.subheader("📰 Titulares Financieros de Impacto Directo")
             if noticias_raw:
                 for n in noticias_raw[:10]:
-                    titulo = n.get('title', 'Sin título')
-                    fuente = n.get('publisher', 'Medio de Comunicación')
-                    enlace = n.get('link', '#')
-                    
                     ts = n.get('providerPublishTime', None)
-                    fecha_p = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M') if ts else "Reciente"
-                    
+                    fecha_p = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M') if ts else "Ahora"
                     st.markdown(f"""
                     <div class="news-card">
-                        <h4 style="margin:0;"><a href="{enlace}" target="_blank" style="text-decoration:none; color:#06b6d4;">{titulo}</a></h4>
+                        <h4 style="margin:0;"><a href="{n.get('link', '#')}" target="_blank" style="text-decoration:none; color:#06b6d4;">{n.get('title')}</a></h4>
                         <div style="margin-top:10px; display:flex; justify-content:space-between; font-size:0.8em; color:#94a3b8;">
-                            <span>Medio Emisor: <b>{fuente}</b></span>
-                            <span>⏱️ Publicación: {fecha_p}</span>
+                            <span>Emisor: <b>{n.get('publisher')}</b></span>
+                            <span>⏱️ {fecha_p}</span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
-            else:
-                st.info("Sin registros de prensa localizados en los agregadores digitales para esta sesión.")
 
     except Exception as e:
-        st.error(f"Error general de conexión o el Ticker no es válido. Detalles del error: {e}")
+        st.error(f"Error en el procesamiento del mercado financiero: {e}")
