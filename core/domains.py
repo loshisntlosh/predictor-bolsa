@@ -1,22 +1,23 @@
 # core/domains.py
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List
 
 @dataclass(frozen=True)
 class MarketMetrics:
-    current_price: float
-    price_change: float
-    percentage_change: float
-    currency: str
-    short_ratio: float
-    revenue_growth: float
-    debt_to_equity: float
+    # Todos los parámetros inicializados con valores por defecto para máxima resiliencia institucional
+    current_price: float = 0.0
+    price_change: float = 0.0
+    percentage_change: float = 0.0
+    currency: str = "USD"
+    short_ratio: float = 0.0
+    revenue_growth: float = 0.0
+    debt_to_equity: float = 0.0
     previous_close: float = 0.0
     volume: float = 0.0
 
-    # Sistema de mitigación contra argumentos inesperados desde la infraestructura (roe, etc.)
-    def __init__(self, current_price: float, price_change: float, percentage_change: float, 
-                 currency: str, short_ratio: float, revenue_growth: float, debt_to_equity: float, 
+    # Constructor blindado contra argumentos extra (**kwargs) y faltantes
+    def __init__(self, current_price: float = 0.0, price_change: float = 0.0, percentage_change: float = 0.0, 
+                 currency: str = "USD", short_ratio: float = 0.0, revenue_growth: float = 0.0, debt_to_equity: float = 0.0, 
                  previous_close: float = 0.0, volume: float = 0.0, **kwargs):
         object.__setattr__(self, 'current_price', current_price)
         object.__setattr__(self, 'price_change', price_change)
