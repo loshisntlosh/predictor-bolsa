@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import List, Tuple, Optional
 import pandas as pd
 from core.domains import MarketMetrics, TargetForecast, CatalystEvent, QuantAssessment, MacroShockResult
+from core.domains import TrumpPredictionResult
 
 class InstitutionalQuantEngine:
     @staticmethod
@@ -124,3 +125,52 @@ class MacroStressEngine:
         ))
         
         return shocks
+
+
+
+class TrumpPredictionEngine:
+    @staticmethod
+    def calculate_political_exposure(metrics: MarketMetrics, ticker: str) -> List[TrumpPredictionResult]:
+        predictions = []
+        # Fecha de análisis anclada en el trimestre actual (Julio 2026)
+        fecha_actual = "2026-07-17" 
+        
+        # Vector 1: Riesgo de Aranceles Globales vs Manufactura / Crecimiento
+        # Si la empresa tiene bajo crecimiento de ingresos u opera en hardware/manufactura, los aranceles son un riesgo.
+        if metrics.revenue_growth < 0.08:
+            score_tariffs = -65.0 if metrics.revenue_growth < 0 else -35.0
+            justificacion = f"La retórica de aranceles universales golpea cadenas de suministro indexadas a {ticker}. Al tener un colchón de crecimiento ajustado ({metrics.revenue_growth*100:.1f}%), el traspaso de costos al consumidor reduce márgenes operativos."
+            label_tariffs = "BAJO FUEGO CRUZADO"
+        else:
+            score_tariffs = 15.0
+            justificacion = f"El fuerte crecimiento de ingresos de {ticker} ({metrics.revenue_growth*100:.1f}%) demuestra un poder de fijación de precios (Pricing Power) capaz de absorber choques arancelarios."
+            label_tariffs = "NEUTRAL / RESILIENTE"
+            
+        predictions.append(TrumpPredictionResult(
+            policy_vector="🌐 Aranceles y Barreras Comerciales",
+            impact_score=score_tariffs,
+            sentiment_label=label_tariffs,
+            analysis_justification=justificacion,
+            last_update_date=fecha_actual
+        ))
+        
+        # Vector 2: Desregulación Corporativa y Alivio Fiscal
+        # Empresas con alto apalancamiento o sectores intensivos de capital se benefician de la desregulación financiera y extensiones impositivas.
+        if metrics.debt_to_equity > 100.0:
+            score_dereg = 45.0
+            justificacion = f"A pesar del alto apalancamiento ({metrics.debt_to_equity:.1f}%), las políticas de desregulación agresiva de mercados de capital y la propuesta de extensión de alivios fiscales corporativos alivian la presión crediticia del activo."
+            label_dereg = "BENEFICIARIO INDIRECTO"
+        else:
+            score_dereg = 75.0
+            justificacion = f"Estructura de balance óptima. {ticker} se posiciona para maximizar la recompra de acciones impulsada por las exenciones impositivas y la repatriación de capitales favorecida por el ejecutivo."
+            label_dereg = "BENEFICIARIO DIRECTO"
+            
+        predictions.append(TrumpPredictionResult(
+            policy_vector="🏛️ Desregulación y Alivio Fiscal de la Administración",
+            impact_score=score_dereg,
+            sentiment_label=label_dereg,
+            analysis_justification=justificacion,
+            last_update_date=fecha_actual
+        ))
+        
+        return predictions
