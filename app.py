@@ -75,48 +75,27 @@ else:
             estrategias_tiempo = InstitutionalQuantEngine.calcular_estrategia_horizontes(ticker_input, metrics, forecast)
 
             nombre_empresa = client._ticker.info.get('longName', ticker_input)
+            sector_empresa = client._ticker.info.get('sector', 'Technology')
             ui.render_realtime_price_header(ticker_input, nombre_empresa, metrics)
             
             if seccion == "🏛️ Terminal Institucional":
                 st.subheader("🤖 Diagnóstico Cuantitativo de Riesgo Ponderado por IA")
                 ui.render_assessment_card(assessment)
-                
                 ui.render_horizon_strategies(estrategias_tiempo)
                 st.markdown("---")
                 
                 st.markdown("### 🧬 Indicadores de Asimetría Justificados Objetivamente")
                 col_u1, col_u2, col_u3 = st.columns(3)
-                
                 with col_u1:
                     fatiga = "⚠️ FATIGA CRÍTICA" if metrics.short_ratio < 1.5 else "🟢 FLUJO SALUDABLE"
                     color_f = "#ef4444" if metrics.short_ratio < 1.5 else "#22c55e"
-                    st.markdown(f"""
-                    <div class="scenario-card">
-                        <h5>⚠️ Saturación de Flujos</h5>
-                        <h3 style="color:{color_f};">{fatiga}</h3>
-                        <p style="font-size:0.88em;color:#cbd5e1;">Métrica: {metrics.short_ratio:.2f} días de cobertura. Dinámica institucional dominante.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
+                    st.markdown(f"""<div class="scenario-card"><h5>⚠️ Saturación de Flujos</h5><h3 style="color:{color_f};">{fatiga}</h3><p style="font-size:0.88em;color:#cbd5e1;">Métrica: {metrics.short_ratio:.2f} días de cobertura.</p></div>""", unsafe_allow_html=True)
                 with col_u2:
                     opacidad = "🚨 CRÍTICO: ALTO APALANCAMIENTO" if metrics.debt_to_equity > 120.0 else "⚖️ CLARIDAD ESTÁNDAR"
                     color_o = "#ef4444" if metrics.debt_to_equity > 120.0 else "#38bdf8"
-                    st.markdown(f"""
-                    <div class="scenario-card">
-                        <h5>🎭 Opacidad y Estructura</h5>
-                        <h3 style="color:{color_o};">{opacidad}</h3>
-                        <p style="font-size:0.88em;color:#cbd5e1;">Apalancamiento indexado: {metrics.debt_to_equity:.1f}%. Evaluación extrema de pasivos.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
+                    st.markdown(f"""<div class="scenario-card"><h5>🎭 Opacidad y Estructura</h5><h3 style="color:{color_o};">{opacidad}</h3><p style="font-size:0.88em;color:#cbd5e1;">Apalancamiento: {metrics.debt_to_equity:.1f}%.</p></div>""", unsafe_allow_html=True)
                 with col_u3:
-                    st.markdown(f"""
-                    <div class="scenario-card">
-                        <h5>📉 Valor en Riesgo Dinámico (VaR)</h5>
-                        <h3 style="color:#ef4444;">-{assessment.estimated_drawdown:.1f}% Max</h3>
-                        <p style="font-size:0.88em;color:#cbd5e1;">Umbral simulado bajo volatilidad implícita del entorno macro actual.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f"""<div class="scenario-card"><h5>📉 Valor en Riesgo Dinámico (VaR)</h5><h3 style="color:#ef4444;">-{assessment.estimated_drawdown:.1f}% Max</h3><p style="font-size:0.88em;color:#cbd5e1;">Umbral simulado bajo volatilidad implícita del entorno macro.</p></div>""", unsafe_allow_html=True)
 
             elif seccion == "🎯 Tesis de Fondos e IA Oracle":
                 ui.render_audited_institutional_theses(ticker_input, theses_institucionales)
@@ -124,7 +103,19 @@ else:
                 ui.render_ai_hyper_forecast_box(ticker_input, metrics, assessment)
 
             elif seccion == "🦅 Trumprediction":
-                impactos_politicos = TrumpPredictionEngine.calculate_political_exposure(metrics, ticker_input)
+                st.markdown("### 🎛️ Centro Táctico de Simulación de Escenarios Políticos")
+                st.write("Modifique los umbrales para recalcular la matriz de asimetría de forma inmediata:")
+                
+                col_sl1, col_sl2 = st.columns(2)
+                with col_sl1:
+                    slider_arancel = st.slider("Porcentaje General de Aranceles Globales (%)", min_value=0, max_value=100, value=20, step=5)
+                with col_sl2:
+                    slider_fiscal = st.slider("Recorte / Incentivo Fiscal Proyectado (%)", min_value=0, max_value=50, value=15, step=5)
+                
+                # Inferencia dinámica basada en sliders
+                impactos_politicos = TrumpPredictionEngine.simular_arbitraje_politico_dinamico(
+                    ticker_input, sector_empresa, slider_arancel, slider_fiscal
+                )
                 ui.render_trump_prediction_dashboard(ticker_input, impactos_politicos, metrics.current_price)
 
             elif seccion == "📅 Cronograma de Eventos":
