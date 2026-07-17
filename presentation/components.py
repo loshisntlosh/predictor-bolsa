@@ -42,3 +42,31 @@ def render_timeline(catalysts: List[CatalystEvent]) -> None:
         </div>
         """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
+from core.domains import MacroShockResult
+
+def render_stress_testing_dashboard(shocks: List[MacroShockResult]) -> None:
+    st.write("Simulación algorítmica de shocks sistémicos basados en la estructura de capital actual del activo:")
+    
+    col1, col2 = st.columns(2)
+    for idx, shock in enumerate(shocks):
+        target_col = col1 if idx % 2 == 0 else col2
+        
+        color_alert = "#ef4444" if shock.risk_level == "EXTREME" else ("#f59e0b" if shock.risk_level == "ELEVATED" else "#22c55e")
+        
+        with target_col:
+            st.markdown(f"""
+            <div class="scenario-card" style="border-left: 5px solid {color_alert}; margin-bottom: 15px;">
+                <h4 style="margin:0; color:#f8fafc;">{shock.scenario_name}</h4>
+                <p style="margin:5px 0; font-size:0.85em; color:#94a3b8;">Nivel de Riesgo Corporativo: <b style="color:{color_alert};">{shock.risk_level}</b></p>
+                <hr style="border-color:#334155; margin:10px 0;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Precio Proyectado bajo Stress:</span>
+                    <b style="color:#f8fafc;">${shock.projected_price:,.2f}</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.9em; margin-top:5px;">
+                    <span>Índice de Vulnerabilidad:</span>
+                    <span style="color:#cbd5e1;">{shock.vulnerability_index:.1f} / 100</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
