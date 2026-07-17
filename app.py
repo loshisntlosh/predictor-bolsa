@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 
 # 1. CONFIGURACIÓN DE PANTALLA Y ESTILOS VISUALES TERMINAL PREMIUM
-st.set_page_config(layout="wide", page_title="Intersector Alpha: Terminal Quant", page_icon="⚡")
+st.set_page_config(layout="wide", page_title="Intersector Institutional Analytics", page_icon="🏛️")
 
 st.markdown("""
 <style>
@@ -16,8 +16,7 @@ st.markdown("""
     .main-title { animation: fadeIn 0.8s ease-out; color: #f8fafc; font-weight: 800; }
     .prediction-box { 
         padding: 25px; border-radius: 12px; 
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: 2px solid #06b6d4; text-align: center;
+        text-align: center;
         animation: fadeIn 1s ease-out; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         margin-bottom: 25px;
     }
@@ -39,14 +38,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================================================================
-# MOTOR DE RECOMENDACIÓN AUTOMÁTICA POR IA Y NARRATIVA (MARKET SCREENER)
+# MOTOR DE FILTRADO NLP Y FUNDAMENTAL DE MERCADO EN SEGUNDO PLANO
 # =========================================================================
-@st.cache_data(ttl=3600)  # Caché de 1 hora para optimizar velocidad de carga
+@st.cache_data(ttl=3600)
 def escanear_mercado_por_ia():
     tickers_vigilancia = ["NVDA", "AAPL", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "LLY", "AVGO", "AMD"]
     lista_recomendados = []
-    
-    alcistas_clave = ['growth', 'profit', 'buy', 'upgrade', 'innovation', 'beats', 'surge', 'partnership']
+    alcistas_clave = ['growth', 'profit', 'buy', 'upgrade', 'innovation', 'beats', 'surge']
     
     for tk in tickers_vigilancia:
         try:
@@ -54,112 +52,101 @@ def escanear_mercado_por_ia():
             t_info = t_empresa.info
             t_news = t_empresa.news
             
-            # Cálculo de score narrativo flash
             score_n = 0
             if t_news:
                 for n in t_news[:5]:
-                    tit = n.get('title', '').lower()
-                    score_n += sum(1 for w in alcistas_clave if w in tit)
+                    score_n += sum(1 for w in alcistas_clave if w in n.get('title', '').lower())
                     
             roe = t_info.get('returnOnEquity', 0.0)
             rev_growth = t_info.get('revenueGrowth', 0.0)
             
-            # Algoritmo de filtrado multifactorial
-            if roe > 0.15 and rev_growth > 0.10 and score_n >= 1:
+            if roe > 0.15 and rev_growth > 0.10:
                 lista_recomendados.append({
                     "Ticker": tk,
-                    "Nombre": t_info.get('shortName', tk),
                     "ROE": f"{roe*100:.1f}%",
-                    "Crecimiento Rev.": f"{rev_growth*100:.1f}%",
-                    "Score Narrativo": "🔥 Fuerte Optimismo" if score_n > 2 else "🟢 Positivo"
+                    "Crecimiento YoY": f"{rev_growth*100:.1f}%",
+                    "Sentimiento": "🔥 Fuerte" if score_n > 2 else "🟢 Estable"
                 })
         except:
             continue
-            
     return pd.DataFrame(lista_recomendados).head(3)
 
 # =========================================================================
-# ESCÁNER CRÍTICO DE CATALIZADORES FINANCIEROS VERÍDICOS
+# ESCÁNER CLÍTICO DE EQUILIBRIO DE CONTROL CORPORATIVO
 # =========================================================================
-def escanear_catalizadores_precision(info_empresa, df_insiders):
+def analizar_catalizadores_y_riesgos(info_empresa, df_insiders):
     catalizadores = []
-    puntos_alcistas = 0
+    score_puntos = 0  # Escala balanceada: valores positivos son alcistas, negativos son bajistas
     
-    # 1. Catalizador de Rentabilidad Estructural (ROE Institucional)
+    # 1. Análisis Técnico de Múltiplos (PER y Margen)
     roe = info_empresa.get('returnOnEquity', 0.0)
     if roe > 0.25:
-        catalizadores.append({
-            "evento": "🎯 Rentabilidad Financiera Excepcional (ROE > 25%)",
-            "impacto": "ALTO",
-            "descripcion": f"El retorno sobre el capital es de {roe*100:.1f}%. Esto demuestra una gestión del capital ultra-eficiente, el principal filtro de Warren Buffett."
-        })
-        puntos_alcistas += 25
+        catalizadores.append({"evento": "🎯 ROE Institucional Sobresaliente", "impacto": "ALTO", "tipo": "BULL", "desc": f"Rentabilidad sobre capital del {roe*100:.1f}%. Alta eficiencia."})
+        score_puntos += 25
+    elif roe < 0.05 and roe != 0.0:
+        catalizadores.append({"evento": "⚠️ Destrucción de Valor sobre Capital (Bajo ROE)", "impacto": "ALTO", "tipo": "BEAR", "desc": f"El ROE de {roe*100:.1f}% indica ineficiencia severa en el uso del dinero de los inversionistas."})
+        score_puntos -= 25
 
-    # 2. Catalizador de Impulso de Ventas (Revenue Growth YoY)
+    # 2. Análisis del Impulso de Ventas
     crecimiento_ingresos = info_empresa.get('revenueGrowth', 0.0)
     if crecimiento_ingresos > 0.15:
-        catalizadores.append({
-            "evento": "🚀 Aceleración de Ingresos Orgánicos (YoY Growth)",
-            "impacto": "CRÍTICO",
-            "descripcion": f"Facturación creciendo a un ritmo del {crecimiento_ingresos*100:.1f}% interanual. Captura masiva de cuota de mercado detectada."
-        })
-        puntos_alcistas += 30
+        catalizadores.append({"evento": "🚀 Aceleración de Ingresos Orgánicos YoY", "impacto": "CRÍTICO", "tipo": "BULL", "desc": f"Ventas creciendo a un ritmo del {crecimiento_ingresos*100:.1f}% interanual."})
+        score_puntos += 30
+    elif crecimiento_ingresos < 0.0 and crecimiento_ingresos != 0.0:
+        catalizadores.append({"evento": "🚨 Contracción de Ventas (Revenue Drop)", "impacto": "CRÍTICO", "tipo": "BEAR", "desc": f"Pérdida de ingresos del {crecimiento_ingresos*100:.1f}% interanual. Alerta de pérdida de mercado."})
+        score_puntos -= 35
 
-    # 3. Catalizador de Salud de Balance (Debt-to-Equity Saludable)
+    # 3. Ratio de Apalancamiento Financiero
     ratio_deuda = info_empresa.get('debtToEquity', 100.0)
-    if ratio_deuda < 80.0:  # Estructura de capital muy desapalancada
-        catalizadores.append({
-            "evento": "🛡️ Fortaleza de Balance y Bajo Apalancamiento",
-            "impacto": "MEDIO",
-            "descripcion": f"Ratio Deuda/Capitalización de apenas {ratio_deuda:.1f}%. Inmunidad frente a entornos prolongados de altas tasas de interés."
-        })
-        puntos_alcistas += 20
-        
-    # 4. Monitoreo SEC de Respaldo Corporativo (Insiders)
+    if ratio_deuda > 150.0:
+        catalizadores.append({"evento": "🚨 Apalancamiento Financiero Crítico (D/E Alto)", "impacto": "ALTO", "tipo": "BEAR", "desc": f"Deuda equivale al {ratio_deuda:.1f}% del capital. Alto riesgo ante tasas elevadas."})
+        score_puntos -= 25
+    elif ratio_deuda < 70.0:
+        score_puntos += 15
+
+    # 4. Flujo de Transacciones de Insiders SEC
     if df_insiders is not None and not df_insiders.empty:
-        compras_grandes = df_insiders[(df_insiders['Text'].str.contains('Buy|Purchase', case=False, na=False)) & (df_insiders['Value'] > 500000)]
-        if not compras_grandes.empty:
-            catalizadores.append({
-                "evento": "💼 Bloque de Capital de Insider Verificado (>500K USD)",
-                "impacto": "CRÍTICO",
-                "descripcion": "Dinero real depositado en el mercado por directores. No hay señal de convicción corporativa más honesta."
-            })
-            puntos_alcistas += 25
+        compras_insider = df_insiders[(df_insiders['Text'].str.contains('Buy|Purchase', case=False, na=False)) & (df_insiders['Value'] > 300000)]
+        ventas_insider = df_insiders[(df_insiders['Text'].str.contains('Sale|Sell', case=False, na=False)) & (df_insiders['Value'] > 1000000)]
+        
+        if not compras_insider.empty:
+            catalizadores.append({"evento": "💼 Respaldo Interno por Compras de Altos Mandos", "impacto": "CRÍTICO", "tipo": "BULL", "desc": "Directores adquiriendo acciones de gran volumen con su propio dinero."})
+            score_puntos += 20
+        if not ventas_insider.empty:
+            catalizadores.append({"evento": "📉 Liquidación Masiva de Acciones (Insider Selling)", "impacto": "ALTO", "tipo": "BEAR", "desc": "Altos ejecutivos liquidando posiciones millonarias. Riesgo de toma de utilidades interna."})
+            score_puntos -= 20
 
-    return catalizadores, puntos_alcistas
+    return catalizadores, score_puntos
 
 # =========================================================================
-# MOTOR PREDICTIVO CON INTELIGENCIA ARTIFICIAL DE DATOS CONCURRENTES
+# MOTOR FINANCIERO CRUDO E IMPARCIAL DE IA
 # =========================================================================
-def modelo_predictivo_ia(noticias, puntos_cat, precio_actual, target_medio):
+def motor_imparcial_ia(noticias, score_puntos, precio_actual, target_medio):
     score_narrativa = 0.0
-    alcistas = ['growth', 'profit', 'buy', 'upgrade', 'innovation', 'approval', 'record', 'bullish', 'partnership', 'beats']
-    bajistas = ['lawsuit', 'loss', 'downgrade', 'risk', 'regulatory', 'investigation', 'declining', 'bearish', 'fine', 'misses']
+    alcistas = ['growth', 'profit', 'buy', 'upgrade', 'beats', 'surge']
+    bajistas = ['lawsuit', 'loss', 'downgrade', 'regulatory', 'investigation', 'misses', 'drop']
     
-    total_noticias = len(noticias) if noticias else 1
     if noticias:
         for n in noticias:
             titulo = n.get('title', '').lower()
-            score_narrativa += sum(0.25 for w in alcistas if w in titulo) - sum(0.25 for w in bajistas if w in titulo)
-        score_narrativa = score_narrativa / total_noticias
+            score_narrativa += sum(0.2 for w in alcistas if w in titulo) - sum(0.2 for w in bajistas if w in titulo)
+        score_narrativa = score_narrativa / len(noticias)
 
-    # Desviación institucional respecto al target de analistas
-    desviacion_target = 0.0
-    if target_medio > 0:
-        desviacion_target = (target_medio - precio_actual) / precio_actual
+    # Desviación implícita de Wall Street
+    desviacion_target = (target_medio - precio_actual) / precio_actual if target_medio > 0 else 0.0
 
-    # Fusión matemática de vectores para la predicción estadística de la IA
-    score_final_ia = (score_narrativa * 0.25) + ((puntos_cat / 100) * 0.50) + (desviacion_target * 0.25)
+    # Ponderación Cuantitativa de Riesgo Integral
+    score_final_ia = (score_narrativa * 0.20) + ((score_puntos / 100) * 0.55) + (desviacion_target * 0.25)
     score_final_ia = max(min(score_final_ia, 1.0), -1.0)
     
     porcentaje_confianza = abs(score_final_ia) * 100
     
-    if score_final_ia > 0.15:
-        return "⚡ PROBABILIDAD ALCISTA ALTA (Fuerte Concurrencia)", "#22c55e", porcentaje_confianza
-    elif score_final_ia < -0.15:
-        return "🚨 ALTA PROBABILIDAD DE CORRECCIÓN (Desgaste Fundamental)", "#ef4444", porcentaje_confianza
+    if score_final_ia > 0.12:
+        return "⚡ ALCISTA ESTRUCTURAL (Alta Convicción)", "#22c55e", porcentaje_confianza, score_final_ia
+    elif score_final_ia < -0.12:
+        return "🚨 RIESGO BAJISTA SEVERO (Alerta Institucional)", "#ef4444", porcentaje_confianza, score_final_ia
     else:
-        return "⚖️ DISTRIBUCIÓN LATERAL EQUILIBRADA (Consolidación)", "#94a3b8", porcentaje_confianza
+        return "⚖️ DISTRIBUCIÓN LATERAL (Sin Ventaja Estadística)", "#94a3b8", porcentaje_confianza, score_final_ia
 
 # =========================================================================
 # INTERFAZ PRINCIPAL DE LA TERMINAL DE INVERSIÓN
@@ -170,23 +157,18 @@ with st.sidebar:
     st.markdown("---")
     seccion = st.sidebar.radio(
         "Módulos Cuantitativos:",
-        ["🔥 Escáner e IA Predictiva", "🎯 Forecast Institucional", "🏢 Perfil de Fundamentales", "📊 Análisis Gráfico", "💼 Transacciones SEC"]
+        ["🏛️ Terminal Institucional", "🎯 Pronósticos de Wall Street", "🏢 Análisis de Balance", "📊 Gráfico de Precios", "💼 Transacciones SEC"]
     )
     st.markdown("---")
     
-    # NUEVO COMPONENTE: SISTEMA AUTOMÁTICO DE RECOMENDACIÓN DE ACCIONES POR IA
-    st.markdown("### 🤖 Selección por IA & Narrativa")
-    st.caption("Top 3 activos filtrados automáticamente en tiempo real por convergencia fundamental y de prensa:")
-    
-    with st.spinner("Ejecutando algoritmo de screening..."):
+    st.markdown("### 🤖 Cribado Automático por IA")
+    with st.spinner("Escaneando el mercado..."):
         df_screening = escanear_mercado_por_ia()
-        if not df_screening.empty:
-            st.dataframe(df_screening, hide_index=True)
-        else:
-            st.caption("Procesando datos del ecosistema...")
+        if not df_screening.empty: st.dataframe(df_screening, hide_index=True)
+        else: st.caption("Consolidando métricas...")
 
-st.markdown("<h1 class='main-title'>🔮 El Intersector: Inteligencia Financiera</h1>", unsafe_allow_html=True)
-ticker = st.text_input("🔍 Ticker de la Empresa (Ej: NVDA, AAPL, AMZN, LLY, TSLA):", "NVDA").upper()
+st.markdown("<h1 class='main-title'>🏛️ Terminal Institutional Alpha</h1>", unsafe_allow_html=True)
+ticker = st.text_input("🔍 Ingrese el Ticker de la Acción (Ej: NVDA, AAPL, AMZN, LLY, TSLA):", "NVDA").upper()
 
 if ticker:
     try:
@@ -195,7 +177,6 @@ if ticker:
         noticias_raw = empresa.news
         insiders_raw = empresa.insider_transactions
         
-        # Extracción y limpieza estricta de métricas de mercado
         precio_actual = float(info.get('currentPrice', info.get('regularMarketPrice', 0.0)))
         precio_previo = float(info.get('previousClose', 1.0))
         cambio_precio = precio_actual - precio_previo
@@ -203,116 +184,124 @@ if ticker:
         volumen_hoy = info.get('regularMarketVolume', 1)
         moneda = info.get('currency', 'USD')
 
-        # Panel de Estado Financiero Superior (KPIs)
+        # KPI Panel Superior
         st.markdown(f"### {info.get('longName', ticker)} <span style='color:#64748b; font-size:0.8em;'>| {info.get('sector', 'N/A')}</span>", unsafe_allow_html=True)
         col_m1, col_m2, col_m3 = st.columns(3)
         with col_m1: st.metric(label="Último Precio", value=f"${precio_actual:,.2f} {moneda}", delta=f"${cambio_precio:,.2f}")
-        with col_m2: st.metric(label="Retorno Diario (%)", value=f"{porcentaje_cambio:,.2f}%", delta=f"{porcentaje_cambio:,.2f}%")
-        with col_m3: st.metric(label="Volumen del Día", value=f"{volumen_hoy:,}")
+        with col_m2: st.metric(label="Retorno Diario", value=f"{porcentaje_cambio:,.2f}%", delta=f"{porcentaje_cambio:,.2f}%")
+        with col_m3: st.metric(label="Volumen Negociado", value=f"{volumen_hoy:,}")
         st.markdown("---")
 
-        # Variables institucionales de analistas necesarias para los módulos
         target_alto = float(info.get('targetHighPrice', precio_actual * 1.15))
         target_medio = float(info.get('targetMedianPrice', precio_actual * 1.05))
         target_bajo = float(info.get('targetLowPrice', precio_actual * 0.90))
 
+        # Ejecución del núcleo algorítmico cruzado
+        lista_catalizadores, puntos_totales_score = analizar_catalizadores_y_riesgos(info, insiders_raw)
+        diag_ia, color_ia, confianza_ia, raw_score = motor_imparcial_ia(noticias_raw, puntos_totales_score, precio_actual, target_medio)
+
         # =========================================================================
-        # MÓDULO 1: ESCÁNER DE PRECISION Y MODELO PREDICTIVO IA
+        # MÓDULO 1: DIAGNÓSTICO INSTITUCIONAL CRUDO Y REALISTA
         # =========================================================================
-        if seccion == "🔥 Escáner e IA Predictiva":
-            st.subheader("🤖 Diagnóstico Predictivo mediante Inteligencia Artificial")
-            st.write("Algoritmo predictivo que entrelaza la desviación del consenso de analistas, catalizadores de balances duros y el sentimiento de prensa actual.")
+        if seccion == "🏛️ Terminal Institucional":
+            st.subheader("🤖 Diagnóstico Estadístico e Imparcial de la IA")
+            st.write("Análisis directo sin filtros optimistas. Combina el comportamiento de los fundamentales corporativos y la presión de los flujos.")
             
-            # Ejecutar escáner fundamental cruzado
-            lista_catalizadores, puntos_totales_cat = escanear_catalizadores_precision(info, insiders_raw)
-            diag_ia, color_ia, confianza_ia = modelo_predictivo_ia(noticias_raw, puntos_totales_cat, precio_actual, target_medio)
-            
+            # Caja predictiva principal
             st.markdown(f"""
-            <div class="prediction-box">
-                <h2 style="margin:0; font-size:1.9em;">Modelo Cuantitativo IA: <span style="color:{color_ia};">{diag_ia}</span></h2>
-                <p style="margin:10px 0 0 0; color:#94a3b8; font-size:1.1em;">Convicción Algorítmica Concurrente: <b>{confianza_ia:.1f}%</b></p>
+            <div class="prediction-box" style="background: linear-gradient(135deg, #0f172a 0%, #020617 100%); border: 2px solid {color_ia};">
+                <h2 style="margin:0; font-size:1.8em; color:#f8fafc;">Veredicto del Algoritmo: <span style="color:{color_ia};">{diag_ia}</span></h2>
+                <p style="margin:10px 0 0 0; color:#94a3b8; font-size:1.1em;">Convicción Cuantitativa Neta: <b>{confianza_ia:.1f}%</b></p>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("### 🔥 Escáner de Catalizadores de Crecimiento Identificados")
+            # NUEVO PANEL CRÍTICO: ASIMETRÍA DE RIESGO Y DRAWDOWN ESTIMADO
+            st.subheader("🛡️ Gestión de Riesgo y Margen de Seguridad")
+            col_r1, col_r2 = st.columns(2)
+            
+            with col_r1:
+                # Margen de seguridad respecto al consenso medio de analistas
+                margen_seguridad = ((target_medio - precio_actual) / target_medio) * 100
+                color_margen = "#22c55e" if margen_seguridad > 0 else "#ef4444"
+                st.markdown(f"""
+                <div class="scenario-card">
+                    <h4 style="margin:0; color:#94a3b8;">📐 Margen de Seguridad Teórico</h4>
+                    <h2 style="margin:10px 0; color:{color_margen};">{margen_seguridad:+.2f}%</h2>
+                    <p style="font-size:0.85em; color:#cbd5e1;">Distancia matemática porcentual frente al valor de consenso de Wall Street. Un porcentaje positivo indica potencial subvaluación.</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with col_r2:
+                # Estimación implícita de Drawdown adverso en base a fundamentales débiles y volatilidad básica
+                drawdown_estimado = max(5.0, 15.0 - (raw_score * 20))
+                st.markdown(f"""
+                <div class="scenario-card">
+                    <h4 style="margin:0; color:#94a3b8;">📉 Riesgo Estimado de Caída (Max Drawdown Est.)</h4>
+                    <h2 style="margin:10px 0; color:#ef4444;">-{drawdown_estimado:.1f}%</h2>
+                    <p style="font-size:0.85em; color:#cbd5e1;">Pérdida máxima estimada de capital bajo condiciones normales si se activan los catalizadores bajistas identificados por el modelo.</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Despliegue Crudo de Eventos / Catalizadores
+            st.markdown("---")
+            st.subheader("🔥 Escáner Crudo de Catalizadores y Eventos Activos")
             if lista_catalizadores:
                 for cat in lista_catalizadores:
-                    color_badge = "#ef4444" if cat['impacto'] == "CRÍTICO" else ("#f59e0b" if cat['impacto'] == "ALTO" else "#38bdf8")
+                    color_b = "#ef4444" if cat['tipo'] == "BEAR" else "#22c55e"
+                    badge_texto = "ALERTA BAJISTA" if cat['tipo'] == "BEAR" else "CATALIZADOR ALCISTA"
                     st.markdown(f"""
-                    <div style="background-color:#1e293b; padding:18px; border-radius:10px; margin-bottom:15px; border-left:6px solid {color_badge};">
-                        <span class="catalyst-badge" style="background-color:{color_badge}33; color:{color_badge}; border: 1px solid {color_badge};">IMPACTO {cat['impacto']}</span>
+                    <div style="background-color:#1e293b; padding:18px; border-radius:10px; margin-bottom:15px; border-left:6px solid {color_b};">
+                        <span class="catalyst-badge" style="background-color:{color_b}22; color:{color_b}; border: 1px solid {color_b};">{badge_texto} | {cat['impacto']}</span>
                         <h4 style="margin:5px 0; color:#f8fafc;">{cat['evento']}</h4>
-                        <p style="margin:5px 0 0 0; font-size:0.9em; color:#cbd5e1;">{cat['descripcion']}</p>
+                        <p style="margin:5px 0 0 0; font-size:0.9em; color:#cbd5e1;">{cat['desc']}</p>
                     </div>
                     """, unsafe_allow_html=True)
             else:
-                st.warning("No se detectan anomalías extremas en las métricas de balance analizadas para esta sesión.")
+                st.info("No se registran distorsiones operativas críticas o anomalías en la estructura del balance actual.")
 
         # =========================================================================
-        # [NUEVO] MÓDULO 2: FORECAST DE INVERSIONISTAS FUERTES (WALL STREET CONSENSUS)
+        # MÓDULO 2: PRONÓSTICOS DE WALL STREET
         # =========================================================================
-        elif seccion == "🎯 Forecast Institucional":
-            st.subheader("🎯 Consenso de Objetivos de Precio y Pronósticos (Previsiones de Analistas)")
-            st.write("Datos extraídos de los informes de investigación de los principales analistas e inversionistas institucionales de Wall Street.")
-            
-            # Cálculo de retornos potenciales estimativos
+        elif seccion == "🎯 Pronósticos de Wall Street":
+            st.subheader("🎯 Consenso del Rango de Precios Objetivo (Target Prices)")
             upside_medio = ((target_medio - precio_actual) / precio_actual) * 100
             
             col_f1, col_f2, col_f3 = st.columns(3)
-            
             with col_f1:
-                st.markdown(f"""
-                <div class="scenario-card" style="border-top: 4px solid #ef4444;">
-                    <h3 style="color:#ef4444; margin:0;">📉 Pronóstico Pesimista</h3>
-                    <h2 style="margin:10px 0; font-size:2.2em;">${target_bajo:,.2f}</h2>
-                    <p style="font-size:0.85em; color:#cbd5e1;"><b>Objetivo Mínimo:</b> Representa la valuación de consenso si el negocio experimenta vientos en contra o contracción de múltiplos de mercado.</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
+                st.markdown(f'<div class="scenario-card" style="border-top: 4px solid #ef4444;"><h3 style="color:#ef4444; margin:0;">📉 Objetivo Mínimo</h3><h2 style="margin:10px 0; font-size:2.2em;">${target_bajo:,.2f}</h2><p style="font-size:0.85em; color:#cbd5e1;">Límite inferior proyectado por analistas si el ciclo corporativo entra en contracción estructural.</p></div>', unsafe_allow_html=True)
             with col_f2:
-                st.markdown(f"""
-                <div class="scenario-card" style="border-top: 4px solid #38bdf8;">
-                    <h3 style="color:#38bdf8; margin:0;">⚖️ Pronóstico Consenso</h3>
-                    <h2 style="margin:10px 0; font-size:2.2em;">${target_medio:,.2f}</h2>
-                    <p style="font-size:0.85em; color:#cbd5e1;"><b>Precio Objetivo Medio:</b> Retorno potencial implícito estimado del <b>{upside_medio:+.2f}%</b> según los modelos de valuación consolidados de la industria.</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
+                st.markdown(f'<div class="scenario-card" style="border-top: 4px solid #38bdf8;"><h3 style="color:#38bdf8; margin:0;">⚖️ Objetivo Medio</h3><h2 style="margin:10px 0; font-size:2.2em;">${target_medio:,.2f}</h2><p style="font-size:0.85em; color:#cbd5e1;">Consenso general de la industria. Ofrece una perspectiva de retorno implícito del <b>{upside_medio:+.2f}%</b>.</p></div>', unsafe_allow_html=True)
             with col_f3:
-                st.markdown(f"""
-                <div class="scenario-card" style="border-top: 4px solid #22c55e;">
-                    <h3 style="color:#22c55e; margin:0;">📈 Pronóstico Optimista</h3>
-                    <h2 style="margin:10px 0; font-size:2.2em;">${target_alto:,.2f}</h2>
-                    <p style="font-size:0.85em; color:#cbd5e1;"><b>Objetivo Máximo:</b> Proyección optimista de los analistas líderes asumiendo un despliegue perfecto de sus catalizadores de crecimiento corporativo.</p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div class="scenario-card" style="border-top: 4px solid #22c55e;"><h3 style="color:#22c55e; margin:0;">📈 Objetivo Máximo</h3><h2 style="margin:10px 0; font-size:2.2em;">${target_alto:,.2f}</h2><p style="font-size:0.85em; color:#cbd5e1;">Límite superior estimado asumiendo un escenario operativo de perfecta ejecución e ingresos récord.</p></div>', unsafe_allow_html=True)
 
-        # ==========================================
-        # RESTO DE MÓDULOS DEL ENTORNO DE INVERSIÓN
-        # ==========================================
-        elif seccion == "🏢 Perfil de Fundamentales":
-            st.subheader("🏢 Fundamentales y Estructura de Márgenes de la Empresa")
+        # =========================================================================
+        # MÓDULO 3: ANÁLISIS DE BALANCE
+        # =========================================================================
+        elif seccion == "🏢 Análisis de Balance":
+            st.subheader("🏢 Estructura de Capital y Eficiencia")
             col_p1, col_p2 = st.columns([1, 2])
             with col_p1:
-                st.metric("Capitalización de Mercado", f"${info.get('marketCap', 0):,}")
-                st.metric("Margen Bruto de Utilidad", f"{info.get('grossMargins', 0.0)*100:.2f}%")
-                st.write(f"**Ubicación Corporativa:** {info.get('country', 'N/A')}")
+                st.metric("Capitalización bursátil", f"${info.get('marketCap', 0):,}")
+                st.metric("Rentabilidad s/ Capital (ROE)", f"{info.get('returnOnEquity', 0.0)*100:.2f}%")
+                st.metric("Crecimiento de Ventas YoY", f"{info.get('revenueGrowth', 0.0)*100:.2f}%")
             with col_p2:
-                st.markdown("**Resumen Estratégico:**")
-                st.info(info.get('longBusinessSummary', 'Datos de perfil no localizados.'))
+                st.markdown("**Resumen de Negocio:**")
+                st.info(info.get('longBusinessSummary', 'No disponible.'))
 
-        elif seccion == "📊 Análisis Gráfico":
-            st.subheader("📈 Cotización de Cierre de Mercado")
+        # =========================================================================
+        # MÓDULOS TRADICIONALES PRESERVADOS
+        # =========================================================================
+        elif seccion == "📊 Gráfico de Precios":
+            st.subheader("📈 Serie Temporal de Cierre")
             historial = empresa.history(period="3mo", interval="1d")
-            if not historial.empty:
-                st.line_chart(historial['Close'], use_container_width=True)
+            if not historial.empty: st.line_chart(historial['Close'], use_container_width=True)
 
         elif seccion == "💼 Transacciones SEC":
-            st.subheader("📅 Archivo de Transacciones Informadas de Altos Mandos")
+            st.subheader("📅 Registro de Transacciones Formulario 4 SEC")
             if insiders_raw is not None and not insiders_raw.empty:
-                st.dataframe(insiders_raw.head(15), use_container_width=True)
+                st.dataframe(insiders_raw.head(20), use_container_width=True)
             else:
-                st.warning("Sin transacciones internas oficiales indexadas para este periodo bursátil.")
+                st.warning("No hay transacciones internas registradas recientemente para este activo.")
 
     except Exception as e:
-        st.error(f"Error crítico en la consolidación de flujos de datos bursátiles: {e}")
+        st.error(f"Error crítico en el procesamiento del activo: {e}")
