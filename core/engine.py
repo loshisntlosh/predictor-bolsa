@@ -92,3 +92,37 @@ class InstitutionalQuantEngine:
             return QuantAssessment("🚨 RIESGO BAJISTA SEVERO", "#ef4444", porcentaje_confianza, score_final_ia, margin_of_safety, estimated_drawdown)
         else:
             return QuantAssessment("⚖️ DISTRIBUCIÓN LATERAL", "#94a3b8", porcentaje_confianza, score_final_ia, margin_of_safety, estimated_drawdown)
+
+
+class MacroStressEngine:
+    @staticmethod
+    def simulate_regime_shocks(metrics: MarketMetrics, forecast: TargetForecast) -> List[MacroShockResult]:
+        shocks = []
+        base_price = metrics.current_price
+        
+        # Escenario 1: Choque de Tasas de Interés (Hawkish Pivot 2026)
+        # Impacta severamente a empresas apalancadas (Debt to Equity alto)
+        interest_sensitivity = (metrics.debt_to_equity / 100.0) * 0.15
+        shock_price_rates = base_price * (1.0 - interest_sensitivity)
+        shocks.append(MacroShockResult(
+            scenario_name="⚡ Alza Inesperada de Tasas (+100bps)",
+            implied_beta_shift=1.25 if metrics.debt_to_equity > 120 else 0.95,
+            projected_price=max(shock_price_rates, forecast.low),
+            risk_level="EXTREME" if metrics.debt_to_equity > 150 else "MITIGATED",
+            vulnerability_index=min(metrics.debt_to_equity * 0.5, 100.0)
+        ))
+        
+        # Escenario 2: Crisis de Cadenas de Suministro / Geopolítica
+        # Impacta si el crecimiento ya viene desacelerándose
+        growth_buffer = max(metrics.revenue_growth, 0.01)
+        supply_shock_impact = 0.20 / growth_buffer if growth_buffer < 0.10 else 0.05
+        shock_price_geo = base_price * (1.0 - supply_shock_impact)
+        shocks.append(MacroShockResult(
+            scenario_name="🌐 Escalada de Conflictos / Sanciones Arancelarias",
+            implied_beta_shift=1.4,
+            projected_price=max(shock_price_geo, forecast.low * 0.85),
+            risk_level="ELEVATED" if metrics.revenue_growth < 0.05 else "MITIGATED",
+            vulnerability_index=85.0 if metrics.revenue_growth < 0.0 else 30.0
+        ))
+        
+        return shocks
