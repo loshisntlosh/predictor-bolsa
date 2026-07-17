@@ -4,9 +4,9 @@ import pandas as pd
 from datetime import datetime
 
 # 1. CONFIGURACIÓN DE PANTALLA Y ESTILOS VISUALES PREMIUM
-st.set_page_config(layout="wide", page_title="El Intersector: Inteligencia de Mercados", page_icon="🔮")
+st.set_page_config(layout="wide", page_title="El Intersector Pro: Inteligencia de Mercados", page_icon="🔮")
 
-# Inyección de CSS para diseño oscuro, animaciones Fade-In y efectos Hover interactivos
+# Inyección de CSS avanzado para diseño oscuro, animaciones Fade-In y efectos Hover interactivos
 st.markdown("""
 <style>
     @keyframes fadeIn {
@@ -53,7 +53,6 @@ def calcular_prediccion_narrativa(noticias, df_insiders):
     palabras_alcistas = ['growth', 'profit', 'buy', 'upgrade', 'innovation', 'approval', 'record', 'bullish', 'expansion', 'partnership']
     palabras_bajistas = ['lawsuit', 'loss', 'downgrade', 'risk', 'regulatory', 'investigation', 'declining', 'bearish', 'fine', 'deficit']
     
-    # Análisis de texto en los titulares de prensa actuales
     if noticias:
         for n in noticias:
             titulo = n.get('title', '').lower()
@@ -62,19 +61,16 @@ def calcular_prediccion_narrativa(noticias, df_insiders):
             if any(word in titulo for word in palabras_bajistas): 
                 score -= 0.15
     
-    # Factor de Convicción: Compras reales de altos mandos (Insider Trading legal)
     if df_insiders is not None and not df_insiders.empty:
         transacciones_texto = " ".join(df_insiders['Text'].astype(str).tolist()).lower()
         if 'buy' in transacciones_texto or 'purchase' in transacciones_texto:
-            score += 0.35  # Gran peso si los CEOs arriesgan su propio dinero
+            score += 0.35  
         if 'sale' in transacciones_texto or 'sell' in transacciones_texto:
-            score -= 0.10  # Peso menor, las ventas a veces son para pagar impuestos
+            score -= 0.10  
             
-    # Acotar el puntaje matemático entre [-1.0, 1.0]
     score = max(min(score, 1.0), -1.0)
     porcentaje_confianza = abs(score) * 100
     
-    # Clasificación de la señal libre de especulación directa
     if score > 0.25:
         return "⚡ ALCISTA (Posible Oportunidad de Compra)", "#22c55e", porcentaje_confianza
     elif score < -0.25:
@@ -82,14 +78,14 @@ def calcular_prediccion_narrativa(noticias, df_insiders):
     else:
         return "⚖️ NEUTRO (Consolidación / Esperando Catalizadores)", "#94a3b8", porcentaje_confianza
 
-# 3. NAVGACIÓN LATERAL (NAVBAR)
+# 3. NAVEGACIÓN LATERAL (NAVBAR)
 with st.sidebar:
     st.image("https://img.icons8.com/fluency/96/radar.png", width=55)
     st.markdown("<h2 style='margin-top:0;'>Radar Intersector</h2>", unsafe_allow_html=True)
     st.markdown("---")
     seccion = st.radio(
         "Módulos del Sistema:",
-        ["🔮 Analizador Predictivo (IA)", "📊 Gráfico Avanzado", "💼 Altos Mandos (SEC)", "📰 Noticias del Sector"]
+        ["🔮 Analizador Predictivo (IA)", "🏢 Perfil de la Empresa", "📊 Gráfico Avanzado", "💼 Altos Mandos (SEC)", "📰 Noticias del Sector"]
     )
     st.markdown("---")
     st.caption("Filtros en Tiempo Real Activos")
@@ -107,7 +103,7 @@ if ticker:
         noticias_raw = empresa.news
         insiders_raw = empresa.insider_transactions
         
-        # Extracción y casteo estricto de floats numéricos en tiempo real
+        # Extracción y casteo estricto de números en tiempo real
         precio_actual = float(info.get('currentPrice', info.get('regularMarketPrice', 0.0)))
         precio_previo = float(info.get('previousClose', 1.0))
         cambio_precio = precio_actual - precio_previo
@@ -115,17 +111,18 @@ if ticker:
         nombre_empresa = info.get('longName', ticker)
         moneda = info.get('currency', 'USD')
         sector = info.get('sector', 'No especificado')
+        volumen_hoy = info.get('regularMarketVolume', 1)
 
         # Panel de Estado Financiero Superior Elegante
         st.markdown(f"### {nombre_empresa} <span style='color:#64748b; font-size:0.8em;'>| Sector: {sector}</span>", unsafe_allow_html=True)
         
         col_m1, col_m2, col_m3 = st.columns(3)
         with col_m1:
-            st.metric(label="Precio de Mercado (Float)", value=f"${precio_actual:,.2f} {moneda}", delta=f"${cambio_precio:,.2f}")
+            st.metric(label="Precio de Mercado", value=f"${precio_actual:,.2f} {moneda}", delta=f"${cambio_precio:,.2f}")
         with col_m2:
             st.metric(label="Variación Porcentual", value=f"{porcentaje_cambio:,.2f}%", delta=f"{porcentaje_cambio:,.2f}%")
         with col_m3:
-            st.metric(label="Volumen Operado Hoy", value=f"{info.get('regularMarketVolume', 0):,}")
+            st.metric(label="Volumen Operado Hoy", value=f"{volumen_hoy:,}")
             
         st.markdown("---")
 
@@ -136,7 +133,6 @@ if ticker:
             st.subheader("🤖 Diagnóstico de Probabilidad de Tendencia Diaria")
             st.write("Análisis cuantitativo instantáneo que cruza la tendencia narrativa política/financiera con el comportamiento de la junta directiva.")
             
-            # Ejecución del algoritmo unificado
             resultado, color_resultado, confianza = calcular_prediccion_narrativa(noticias_raw, insiders_raw)
             
             st.markdown(f"""
@@ -146,12 +142,31 @@ if ticker:
             </div>
             """, unsafe_allow_html=True)
             
-            # Guía rápida interpretativa para el usuario
             st.markdown("#### 🤔 ¿Cómo interpretar este porcentaje?")
             st.info("• **Puntaje Alto (>60%):** Fuerte convergencia. Las noticias del sector y las compras de los directivos apuntan en una misma dirección directa.\n\n• **Puntaje Bajo (<30%):** Incertidumbre o fuerzas cruzadas (ej. noticias malas pero CEOs comprando, o viceversa). Se sugiere cautela para operaciones intradía.")
 
         # ==========================================
-        # SECCIÓN B: GRÁFICO AVANZADO CON FILTROS
+        # [NUEVA] SECCIÓN B: PERFIL DE LA EMPRESA (FUNDAMENTALES)
+        # ==========================================
+        elif seccion == "🏢 Perfil de la Empresa":
+            st.subheader("🏢 Información Corporativa y Datos Clave")
+            st.write("Conoce las dimensiones de la empresa antes de analizar sus movimientos bursátiles.")
+            
+            col_p1, col_p2 = st.columns([1, 2])
+            with col_p1:
+                # Datos duros de inversión
+                cap_mercado = info.get('marketCap', 0)
+                st.metric("Capitalización de Mercado (Tamaño)", f"${cap_mercado:,.0f} {moneda}")
+                st.write(f"**País:** {info.get('country', 'N/A')}")
+                st.write(f"**Sitio Web:** [Visitar Web]({info.get('website', '#')})")
+                st.write(f"**Empleados a Tiempo Completo:** {info.get('fullTimeEmployees', 0):,}")
+            with col_p2:
+                # Descripción del negocio
+                st.markdown("**Descripción del Negocio:**")
+                st.info(info.get('longBusinessSummary', 'No hay descripción disponible.'))
+
+        # ==========================================
+        # SECCIÓN C: GRÁFICO AVANZADO CON FILTROS
         # ==========================================
         elif seccion == "📊 Gráfico Avanzado":
             st.subheader("📈 Gráfico de Cotización con Temporalidad Variable")
@@ -168,27 +183,23 @@ if ticker:
                     ["1 Minuto", "5 Minutos", "15 Minutos", "30 Minutos", "1 Hora", "1 Día", "1 Mes"], index=5
                 )
 
-            # Mapeo técnico de variables para llamadas a yfinance
             mapa_p = {"1 Día": "1d", "5 Días": "5d", "1 Mes": "1mo", "6 Meses": "6mo", "1 Año": "1y", "Máximo Histórico": "max"}
             mapa_i = {"1 Minuto": "1m", "5 Minutos": "5m", "15 Minutos": "15m", "30 Minutos": "30m", "1 Hora": "1h", "1 Día": "1d", "1 Mes": "1mo"}
-            
             p_api, i_api = mapa_p[periodo], mapa_i[intervalo]
 
-            # Corrección automática de restricciones de la API para minutos
             if "Minuto" in intervalo or "Hora" in intervalo:
                 if p_api in ["6mo", "1y", "max"]:
-                    st.warning("⚠️ Nota: Las frecuencias de minutos solo están disponibles para rangos máximos de 5 días por regulaciones de almacenamiento de datos. Ajustando ventana temporal.")
+                    st.warning("⚠️ Nota: Las frecuencias de minutos solo están disponibles para rangos máximos de 5 días por regulaciones del mercado. Ajustando ventana temporal automáticamente.")
                     p_api = "5d"
 
             historial = empresa.history(period=p_api, interval=i_api)
             if not historial.empty:
                 st.line_chart(historial['Close'], use_container_width=True)
-                st.caption(f"Visualización activa: Intervalo '{intervalo}' de forma continua sobre el rango '{periodo}'.")
             else:
-                st.error("Error en la matriz de datos: No se consolidaron precios para este bloque específico de tiempo.")
+                st.error("Error: No se consolidaron precios para este bloque específico de tiempo.")
 
         # ==========================================
-        # SECCIÓN C: ALTOS MANDOS CON FECHA REAL
+        # SECCIÓN D: ALTOS MANDOS CON FECHA REAL Y EXPORTADOR
         # ==========================================
         elif seccion == "💼 Altos Mandos (SEC)":
             st.subheader("📅 Registro Cronológico de Transacciones Internas (Insiders)")
@@ -196,27 +207,39 @@ if ticker:
             
             if insiders_raw is not None and not insiders_raw.empty:
                 df_real = insiders_raw.reset_index()
-                
-                # Extracción y formateo limpio de la marca de tiempo de la SEC
                 if 'index' in df_real.columns:
                     df_real.rename(columns={'index': 'Fecha Efectiva'}, inplace=True)
                 
                 df_real['Fecha Efectiva'] = pd.to_datetime(df_real['Fecha Efectiva']).dt.date
-                
                 cols_validas = ['Fecha Efectiva', 'Insider', 'Position', 'Text', 'Shares', 'Value']
                 df_final = df_real[[c for c in cols_validas if c in df_real.columns]].sort_values(by='Fecha Efectiva', ascending=False)
                 
-                st.dataframe(df_final, use_container_width=True, height=450)
+                # [FUNCIONALIDAD EXTRA] Botón para descargar a Excel/CSV directamente
+                csv = df_final.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Descargar Datos de Altos Mandos (CSV para Excel)",
+                    data=csv,
+                    file_name=f'insiders_{ticker}.csv',
+                    mime='text/csv',
+                )
                 
-                # Alertas visuales dinámicas
+                st.dataframe(df_final, use_container_width=True, height=400)
+                
+                # [NUEVA MÉTRICA] Índice de Anomalía de Volumen
+                # Sumamos las acciones operadas en los movimientos más recientes
+                acciones_insiders = df_final['Shares'].iloc[:5].sum()
+                porcentaje_del_volumen = (acciones_insiders / volumen_hoy) * 100
+                
+                st.markdown(f"**📊 Ratio de Impacto Corporativo:** Las últimas transacciones de la junta representan el **{porcentaje_del_volumen:.4f}%** del volumen total que se comercia hoy en el mercado.")
+                
                 compras = df_final[df_final['Text'].str.contains('Buy|Purchase', case=False, na=False)]
                 if not compras.empty:
-                    st.success(f"🔥 Anomalía de Convicción: Detectadas {len(compras)} compras directas por miembros de la mesa de control corporativo.")
+                    st.success(f"🔥 Anomalía de Convicción: Detectadas compras directas por miembros de la mesa de control corporativo.")
             else:
                 st.warning("No hay transacciones registradas de insiders para este activo en los últimos meses.")
 
         # ==========================================
-        # SECCIÓN D: NOTICIAS DEL SECTOR CON HOVER
+        # SECCIÓN E: NOTICIAS DEL SECTOR CON HOVER
         # ==========================================
         elif seccion == "📰 Noticias del Sector":
             st.subheader(f"📰 Flujo de Prensa Cruzada: {ticker} y Entorno Político")
@@ -227,7 +250,6 @@ if ticker:
                     fuente = n.get('publisher', 'Medio de Comunicación')
                     enlace = n.get('link', '#')
                     
-                    # Convertir timestamp a formato legible
                     ts = n.get('providerPublishTime', None)
                     fecha_p = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M') if ts else "Reciente"
                     
@@ -244,4 +266,4 @@ if ticker:
                 st.info("Sin registros de prensa localizados en los agregadores digitales para esta sesión.")
 
     except Exception as e:
-        st.error(f"Error general en los servidores de consulta de datos. Revisa las siglas o reintenta. Detalles: {e}")
+        st.error(f"Error general de conexión o el Ticker no es válido. Detalles del error: {e}")
