@@ -51,3 +51,11 @@ class MacroShockResult:
     projected_price: float
     risk_level: str  # EXTREME, ELEVATED, MITIGATED
     vulnerability_index: float  # 0.0 a 100.0
+
+@dataclass(frozen=True)
+class TrumpPredictionResult:
+    policy_vector: str        # E.g., "Aranceles Agresivos", "Desregulación"
+    impact_score: float       # Escala de -100 a +100
+    sentiment_label: str      # "BENEFICIARIO DIRECTO", "BAJO FUEGO CRUZADO", "NEUTRAL"
+    analysis_justification: str
+    last_update_date: str     # Fecha de verificación estricta (Julio 2026)
