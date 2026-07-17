@@ -1,5 +1,6 @@
 # app.py
 import streamlit as st
+import datetime
 from infrastructure.yfinance_client import InvestmentDataClient
 from core.engine import InstitutionalQuantEngine, MacroStressEngine, TrumpPredictionEngine, HighFrequencyScannerEngine
 from core.exceptions import QuantMatrixError
@@ -29,8 +30,34 @@ with st.sidebar:
 
 if seccion == "📡 Radar Escáner 15m":
     st.markdown("<h1 class='main-title'>📡 Escáner de Flujo de Alta Frecuencia</h1>", unsafe_allow_html=True)
-    recom_radar = HighFrequencyScannerEngine.ejecutar_escaneo_15m()
-    ui.render_high_frequency_radar(recom_radar)
+    
+    if 'last_radar_scan' not in st.session_state:
+        st.session_state.last_radar_scan = None
+    if 'radar_data' not in st.session_state:
+        st.session_state.radar_data = []
+
+    col_header, col_btn = st.columns([4, 1])
+    
+    with col_header:
+        if st.session_state.last_radar_scan:
+            st.success(f"⚡ Última depuración estructural de IA ejecutada a las: **{st.session_state.last_radar_scan}** (Ciclo de 15 Minutos)")
+        else:
+            st.info("Terminal lista para iniciar barrido del orderbook...")
+            
+    with col_btn:
+        if st.button("🔄 Forzar Barrido RT"):
+            with st.spinner("IA analizando balances y flujos en vivo..."):
+                st.session_state.radar_data = HighFrequencyScannerEngine.ejecutar_escaneo_real_ia()
+                st.session_state.last_radar_scan = datetime.datetime.now().strftime("%H:%M:%S")
+                st.rerun()
+
+    if not st.session_state.radar_data:
+        with st.spinner("Ejecutando asignación cuántica inicial de activos..."):
+            st.session_state.radar_data = HighFrequencyScannerEngine.ejecutar_escaneo_real_ia()
+            st.session_state.last_radar_scan = datetime.datetime.now().strftime("%H:%M:%S")
+            st.rerun()
+
+    ui.render_high_frequency_radar(st.session_state.radar_data)
 
 else:
     st.markdown("<h1 class='main-title'>🏛️ Terminal Institutional Alpha Matrix</h1>", unsafe_allow_html=True)
@@ -45,7 +72,6 @@ else:
             catalysts, raw_score = InstitutionalQuantEngine.analizar_catalizadores_y_cronograma(metrics, insiders)
             assessment = InstitutionalQuantEngine.motor_imparcial_ia(client._ticker.news, raw_score, metrics, forecast)
             theses_institucionales = InstitutionalQuantEngine.obtener_tesis_recientes(ticker_input, metrics)
-            # Nuevo cálculo estratégico de horizontes
             estrategias_tiempo = InstitutionalQuantEngine.calcular_estrategia_horizontes(ticker_input, metrics, forecast)
 
             nombre_empresa = client._ticker.info.get('longName', ticker_input)
@@ -55,7 +81,6 @@ else:
                 st.subheader("🤖 Diagnóstico Cuantitativo de Riesgo Ponderado por IA")
                 ui.render_assessment_card(assessment)
                 
-                # INYECCIÓN DEL COMPONENTE DE HORIZONTES DE INVERSIÓN (CUÁNDO COMPRAR / VENDER / RETENER)
                 ui.render_horizon_strategies(estrategias_tiempo)
                 st.markdown("---")
                 
